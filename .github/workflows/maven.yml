@@ -34,26 +34,28 @@ jobs:
         distribution: 'temurin'
         architecture: x64
 
-    - name: Install cosign
-      uses: sigstore/cosign-installer@v3
+    # - name: Install cosign
+    #   uses: sigstore/cosign-installer@v3
 
-    - name: Install Syft
-      run: |
-        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | \
-          sh -s -- -b /usr/local/bin
+    # - name: Install Syft
+    #   run: |
+    #     curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | \
+    #       sh -s -- -b /usr/local/bin
 
-    - name: Install grype
-      run: |
-        curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | \
-          sh -s -- -b /usr/local/bin
+    # - name: Install grype
+    #   run: |
+    #     curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | \
+    #       sh -s -- -b /usr/local/bin
 
 # BUILD
 
-    - name: Install dependencies
-      run: mvn -f pom.xml dependency:go-offline
+    # - name: Install dependencies
+    #   run: mvn -f pom.xml dependency:go-offline
 
-    - name: Build
-      run: mvn clean deploy -P release
+    - name: Deploy
+      run: mvn --batch-mode deploy
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Pack Maven
       run: |
