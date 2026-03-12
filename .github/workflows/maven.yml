@@ -49,11 +49,11 @@ jobs:
 
 # BUILD
 
-    # - name: Install dependencies
-    #   run: mvn -f pom.xml dependency:go-offline
+    - name: Package
+      run: mvn -B package
 
     - name: Deploy
-      run: mvn --batch-mode deploy
+      run: mvn -B deploy
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
