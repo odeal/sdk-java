@@ -15,7 +15,7 @@ Odeal Entegrasyon SDK (Otomatik Üretildi)
 <dependency>
     <groupId>com.odeal</groupId>
     <artifactId>odeal-sdk</artifactId>
-    <version>2.2.5</version>
+    <version>2.2.7</version>
 </dependency>
 ```
 
