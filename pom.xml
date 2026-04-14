@@ -6,7 +6,7 @@
 
     <groupId>com.odeal</groupId>
     <artifactId>odeal-sdk</artifactId>
-    <version>2.2.11</version>
+    <version>2.2.12</version>
     
     <name>Odeal Java SDK</name>
     <description>Odeal Entegrasyon SDK (Otomatik Üretildi)</description>
