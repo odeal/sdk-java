@@ -1,5 +1,8 @@
 package com.odeal.sdk;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class OdealConfig {
     private String secretKey;
     private String merchantKey;
@@ -7,8 +10,23 @@ public class OdealConfig {
     private String externalDeviceKey;
     private boolean skipClientValidation = false;
     private boolean debugMode = false;
+    
+    // --- ENTERPRISE YETENEKLERİ ---
+    private int timeoutMs = 30000;
+    private int maxRetryCount = 3;
+    private boolean maskSensitiveData = true;
+    private Logger logger = LoggerFactory.getLogger("odeal-sdk");
+    private java.util.List<OdealInterceptor> interceptors = new java.util.ArrayList<>();
+    
+    // --- CIRCUIT BREAKER ---
+    private boolean circuitBreakerEnabled = false;
+    private int circuitBreakerThreshold = 5;
+    private int circuitBreakerResetMs = 60000;
 
     public OdealConfig() {}
+
+    /** Fluent builder ile OdealConfig oluşturmak için. */
+    public static OdealConfigBuilder builder() { return new OdealConfigBuilder(); }
 
     public OdealConfig(String secretKey, String merchantKey, String baseUrl, String externalDeviceKey, boolean skipClientValidation, boolean debugMode) {
         this.secretKey = secretKey;
@@ -36,4 +54,45 @@ public class OdealConfig {
 
     public boolean isDebugMode() { return debugMode; }
     public void setDebugMode(boolean debugMode) { this.debugMode = debugMode; }
+
+    public int getTimeoutMs() { return timeoutMs; }
+    public void setTimeoutMs(int timeoutMs) { this.timeoutMs = timeoutMs; }
+
+    public int getMaxRetryCount() { return maxRetryCount; }
+    public void setMaxRetryCount(int maxRetryCount) { this.maxRetryCount = maxRetryCount; }
+
+    public boolean isMaskSensitiveData() { return maskSensitiveData; }
+    public void setMaskSensitiveData(boolean maskSensitiveData) { this.maskSensitiveData = maskSensitiveData; }
+
+    public Logger getLogger() { return logger; }
+    public void setLogger(Logger logger) { this.logger = logger; }
+
+    public java.util.List<OdealInterceptor> getInterceptors() { return interceptors; }
+    public void setInterceptors(java.util.List<OdealInterceptor> interceptors) { this.interceptors = interceptors; }
+
+    public boolean isCircuitBreakerEnabled() { return circuitBreakerEnabled; }
+    public void setCircuitBreakerEnabled(boolean v) { this.circuitBreakerEnabled = v; }
+    public int getCircuitBreakerThreshold() { return circuitBreakerThreshold; }
+    public void setCircuitBreakerThreshold(int v) { this.circuitBreakerThreshold = v; }
+    public int getCircuitBreakerResetMs() { return circuitBreakerResetMs; }
+    public void setCircuitBreakerResetMs(int v) { this.circuitBreakerResetMs = v; }
+    // --- GÜVENLİK ---
+
+    @Override
+    public String toString() {
+        return "OdealConfig{" +
+            "baseUrl='" + baseUrl + '\'' +
+            ", secretKey='" + maskSecret(secretKey) + '\'' +
+            ", merchantKey='" + maskSecret(merchantKey) + '\'' +
+            ", debugMode=" + debugMode +
+            ", timeoutMs=" + timeoutMs +
+            ", maxRetryCount=" + maxRetryCount +
+            '}';
+    }
+
+    private static String maskSecret(String secret) {
+        if (secret == null || secret.isEmpty()) return "(empty)";
+        if (secret.length() <= 8) return "***";
+        return secret.substring(0, 4) + "***" + secret.substring(secret.length() - 4);
+    }
 }

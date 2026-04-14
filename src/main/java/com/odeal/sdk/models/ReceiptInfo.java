@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.odeal.sdk.enums.*;
 import java.util.List;
 import java.math.BigDecimal;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.Valid;
 public class ReceiptInfo {
     /**
      * Koşullu. Eğer ödeme tipi 'FOOD_CARD' ise ZORUNLUDUR.
@@ -24,25 +21,21 @@ public class ReceiptInfo {
      * Koşullu. Sadece 'CURRENT_ACCOUNT' (Cari Hesap) işleminde kullanılır (Fatura/Ekstre No).
      */
     @JsonProperty("receiptNumber")
-    @Pattern(regexp = "^.{1,50}$", message = "ReceiptNumber formatı geçersiz.")
     private String receiptNumber;
     /**
      * Koşullu. Sadece 'CURRENT_ACCOUNT' (Cari Hesap) işleminde kullanılır (YYYY-MM-DD).
      */
     @JsonProperty("receiptDate")
-    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Fiş tarihi YYYY-MM-DD formatında olmalıdır.")
     private String receiptDate;
     /**
      * Opsiyonel.
      */
     @JsonProperty("SiparisNo")
-    @Pattern(regexp = "^.{0,50}$", message = "SiparisNo formatı geçersiz.")
     private String siparisNo;
     /**
      * Opsiyonel.
      */
     @JsonProperty("Garson")
-    @Pattern(regexp = "^.{0,50}$", message = "Garson formatı geçersiz.")
     private String garson;
     public ReceiptInfo() {}
     @JsonProperty("foodCardBrandId")

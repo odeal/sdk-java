@@ -1,23 +1,28 @@
 package com.odeal.sdk.resources;
 
-import com.odeal.sdk.SdkResource;
+import com.odeal.sdk.BaseResource;
 import com.odeal.sdk.OdealConfig;
 import com.odeal.sdk.models.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-public interface SepetSilmeResource extends SdkResource {
+/**
+ * Configuration API islemleri.
+ */
+public class ConfigurationResource extends BaseResource {
+
+    public ConfigurationResource(OdealConfig config) {
+        super(config);
+    }
     /**
-     * Sepet Sil
+     * Konfigürasyon Kaydet
      */
-    default void deleteBasket(
-        String referenceCode
+    public void saveConfiguration(
+        ConfigurationRequest request
     ) {
-        deleteBasket(
-            
-            referenceCode,
+        saveConfiguration(
+            request,
             null,
             null,
             null
@@ -25,15 +30,15 @@ public interface SepetSilmeResource extends SdkResource {
     }
 
     /**
-     * Sepet Sil
+     * Konfigürasyon Kaydet
      */
-    default void deleteBasket(
-        String referenceCode,
+    public void saveConfiguration(
+        ConfigurationRequest request,
         String secretKey,
         String merchantKey,
         String baseUrl
     ) {
-        String path = "/basket/delete";
+        String path = "/configuration";
 
         Map<String, Object> queryParams = new HashMap<>();
 
@@ -50,14 +55,11 @@ public interface SepetSilmeResource extends SdkResource {
         else if (getConfig().getMerchantKey() != null) {
              headerParams.put("X-ODEAL-MERCHANT-KEY", String.valueOf(getConfig().getMerchantKey()));
         }
-        if (referenceCode != null) {
-            headerParams.put("referenceCode", String.valueOf(referenceCode));
-        }
 
         send(
-            "DELETE",
+            "POST",
             path,
-            null,
+            request,
             queryParams,
             headerParams
         );

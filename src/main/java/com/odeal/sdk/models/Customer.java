@@ -4,15 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.odeal.sdk.enums.*;
 import java.util.List;
 import java.math.BigDecimal;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.Valid;
 public class Customer {
     /**
      * Opsiyonel. Müşterinin kendi referans kodu.
      */
     @JsonProperty("referenceCode")
-    @Pattern(regexp = "^.{0,50}$", message = "ReferenceCode formatı geçersiz.")
     private String referenceCode;
     /**
      * Müşteri Tipi. Default: INDIVIDUAL.
@@ -23,69 +19,56 @@ public class Customer {
      * 
      */
     @JsonProperty("name")
-    @Pattern(regexp = "^.{0,100}$", message = "Name formatı geçersiz.")
     private String name;
     /**
      * 
      */
     @JsonProperty("surname")
-    @Pattern(regexp = "^.{0,100}$", message = "Surname formatı geçersiz.")
     private String surname;
     /**
      * 
      */
     @JsonProperty("identityNumber")
-    @Pattern(regexp = "^[1-9]\\d{10}$", message = "TCKN 11 haneli olmalı.")
     private String identityNumber;
     /**
      * 
      */
     @JsonProperty("title")
-    @Pattern(regexp = "^.{0,255}$", message = "Title formatı geçersiz.")
     private String title;
     /**
      * 
      */
     @JsonProperty("taxNumber")
-    @Pattern(regexp = "^\\d{10}$", message = "VKN 10 haneli olmalı.")
     private String taxNumber;
     /**
      * 
      */
     @JsonProperty("taxOffice")
-    @Pattern(regexp = "^.{0,100}$", message = "TaxOffice formatı geçersiz.")
     private String taxOffice;
     /**
      * 
      */
     @JsonProperty("city")
-    @NotNull(message = "City cannot be null")
-    @Pattern(regexp = "^.{1,50}$", message = "City formatı geçersiz.")
     private String city;
     /**
      * 
      */
     @JsonProperty("town")
-    @NotNull(message = "Town cannot be null")
-    @Pattern(regexp = "^.{1,50}$", message = "Town formatı geçersiz.")
     private String town;
     /**
      * 
      */
     @JsonProperty("gsmNumber")
-    @Pattern(regexp = "^[1-9][0-9]{9}$", message = "GSM No başında 0 olmadan 10 hane olmalıdır.")
     private String gsmNumber;
     /**
      * 
      */
     @JsonProperty("email")
-    @Pattern(regexp = "^.{0,100}$", message = "Email formatı geçersiz.")
     private String email;
     /**
      * 
      */
     @JsonProperty("address")
-    @Pattern(regexp = "^.{0,500}$", message = "Address formatı geçersiz.")
     private String address;
     public Customer() {}
     @JsonProperty("referenceCode")

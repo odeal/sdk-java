@@ -1,18 +1,24 @@
 package com.odeal.sdk.resources;
 
-import com.odeal.sdk.SdkResource;
+import com.odeal.sdk.BaseResource;
 import com.odeal.sdk.OdealConfig;
 import com.odeal.sdk.models.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-public interface RaporlamaResource extends SdkResource {
+/**
+ * Report API islemleri.
+ */
+public class ReportResource extends BaseResource {
+
+    public ReportResource(OdealConfig config) {
+        super(config);
+    }
     /**
      * İşlem Raporu
      */
-    default List<TransactionReport> getTransactionReport(
+    public List<TransactionReport> getTransactionReport(
         String beginDate,
         String endDate
     ) {
@@ -31,7 +37,7 @@ public interface RaporlamaResource extends SdkResource {
     /**
      * İşlem Raporu
      */
-    default List<TransactionReport> getTransactionReport(
+    public List<TransactionReport> getTransactionReport(
         String beginDate,
         String endDate,
         String secretKey,

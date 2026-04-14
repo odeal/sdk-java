@@ -1,22 +1,27 @@
 package com.odeal.sdk.resources;
 
-import com.odeal.sdk.SdkResource;
+import com.odeal.sdk.BaseResource;
 import com.odeal.sdk.OdealConfig;
 import com.odeal.sdk.models.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-public interface SepetFoodCardResource extends SdkResource {
+/**
+ * Unit API islemleri.
+ */
+public class UnitResource extends BaseResource {
+
+    public UnitResource(OdealConfig config) {
+        super(config);
+    }
     /**
-     * Yemek kartı işlemleri. `receiptInfo` ve içindeki `foodCardBrandId` zorunludur.
+     * Birimleri Listele
      */
-    default BasketResponse createFoodCardBasket(
-        BasketRequestFoodCard request
+    public List<Unit> listUnits(
     ) {
-        return createFoodCardBasket(
-            request,
+        return listUnits(
+            
             null,
             null,
             null
@@ -24,15 +29,14 @@ public interface SepetFoodCardResource extends SdkResource {
     }
 
     /**
-     * Yemek kartı işlemleri. `receiptInfo` ve içindeki `foodCardBrandId` zorunludur.
+     * Birimleri Listele
      */
-    default BasketResponse createFoodCardBasket(
-        BasketRequestFoodCard request,
+    public List<Unit> listUnits(
         String secretKey,
         String merchantKey,
         String baseUrl
     ) {
-        String path = "/basket/foodCard";
+        String path = "/unit";
 
         Map<String, Object> queryParams = new HashMap<>();
 
@@ -50,13 +54,13 @@ public interface SepetFoodCardResource extends SdkResource {
              headerParams.put("X-ODEAL-MERCHANT-KEY", String.valueOf(getConfig().getMerchantKey()));
         }
 
-        return send(
-            "POST",
+        return sendList(
+            "GET",
             path,
-            request,
+            null,
             queryParams,
             headerParams,
-            BasketResponse.class
+            Unit.class
         );
     }
 }

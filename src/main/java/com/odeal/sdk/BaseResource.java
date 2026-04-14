@@ -44,6 +44,10 @@ public abstract class BaseResource {
         this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
+    public OdealConfig getConfig() {
+        return config;
+    }
+
     public <T> T send(String method, String path, Object body, Map<String, Object> queryParams, Map<String, String> headerParams, Class<T> responseType) {
         return (T) sendInternal(method, path, body, queryParams, headerParams, responseType, false);
     }

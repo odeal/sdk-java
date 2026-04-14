@@ -1,18 +1,24 @@
 package com.odeal.sdk.resources;
 
-import com.odeal.sdk.SdkResource;
+import com.odeal.sdk.BaseResource;
 import com.odeal.sdk.OdealConfig;
 import com.odeal.sdk.models.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-public interface OdemeResource extends SdkResource {
+/**
+ * Payment API islemleri.
+ */
+public class PaymentResource extends BaseResource {
+
+    public PaymentResource(OdealConfig config) {
+        super(config);
+    }
     /**
      * Ödeme İptali
      */
-    default Object cancelPayment(
+    public Object cancelPayment(
         Object request
     ) {
         return cancelPayment(
@@ -26,7 +32,7 @@ public interface OdemeResource extends SdkResource {
     /**
      * Ödeme İptali
      */
-    default Object cancelPayment(
+    public Object cancelPayment(
         Object request,
         String secretKey,
         String merchantKey,
