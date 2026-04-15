@@ -13,7 +13,7 @@ Odeal Entegrasyon SDK (Otomatik Üretildi)
 <dependency>
     <groupId>com.odeal</groupId>
     <artifactId>odeal-sdk</artifactId>
-    <version>2.2.14</version>
+    <version>2.2.15</version>
 </dependency>
 ```
 
@@ -154,5 +154,5 @@ config.setMaxRetryCount(5);       // Varsayılan: 3
 
 MIT
 
-> **Version:** 2.2.14 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
+> **Version:** 2.2.15 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
 

@@ -28,7 +28,7 @@ public abstract class BaseResource {
     protected final HttpClient httpClient;
     protected final OdealConfig config;
     protected final ObjectMapper objectMapper;
-    private static final String AGENT = "OdealSdkJavaClient/2.2.14";
+    private static final String AGENT = "OdealSdkJavaClient/2.2.15";
     
         private final OdealCircuitBreaker circuitBreaker;
         
@@ -76,7 +76,7 @@ public abstract class BaseResource {
         
                 // Circuit Breaker Guard
                 if (circuitBreaker != null && !circuitBreaker.allowRequest()) {
-                    throw new OdealApiException("Circuit breaker is open. Requests are temporarily blocked.", 503, null);
+                    throw new com.odeal.sdk.exceptions.OdealCircuitOpenException();
                 }
                 
         try {
