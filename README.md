@@ -13,7 +13,7 @@ Odeal Entegrasyon SDK (Otomatik Üretildi)
 <dependency>
     <groupId>com.odeal</groupId>
     <artifactId>odeal-sdk</artifactId>
-    <version>2.2.16</version>
+    <version>2.2.17</version>
 </dependency>
 ```
 
@@ -150,9 +150,33 @@ config.setTimeoutMs(60000);      // Varsayılan: 30000ms
 config.setMaxRetryCount(5);       // Varsayılan: 3
 ```
 
+## Request Logger
+
+SDK, hazır `OdealRequestLogger` middleware'i ile tüm HTTP trafiğini loglamanıza olanak tanır:
+
+```java
+OdealRequestLogger logger = new OdealRequestLogger.Builder()
+    .level("info")
+    .maskFields(Arrays.asList("password", "cvv", "cardNumber"))
+    .logBody(true)
+    .logResponseBody(false)
+    .minDurationMs(0)
+    .build();
+
+OdealConfig config = new OdealConfig.Builder()
+    .secretKey("sk_xxx")
+    .addInterceptor(logger)
+    .build();
+
+// Çıktı (SLF4J):
+// [ODEAL INFO] → POST https://api.odeal.com/basket/simple
+//   Body: {"merchantKey":"mk_xxx","password":"***"}
+// [ODEAL INFO] ← 200 POST https://api.odeal.com/basket/simple (142ms)
+```
+
 ## Lisans
 
 MIT
 
-> **Version:** 2.2.16 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
+> **Version:** 2.2.17 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
 
