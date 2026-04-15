@@ -10,6 +10,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.odeal.sdk.exceptions.OdealApiException;
 
+import com.odeal.sdk.exceptions.OdealValidationException;
+
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -28,7 +31,7 @@ public abstract class BaseResource {
     protected final HttpClient httpClient;
     protected final OdealConfig config;
     protected final ObjectMapper objectMapper;
-    private static final String AGENT = "OdealSdkJavaClient/2.2.15";
+    private static final String AGENT = "OdealSdkJavaClient/2.2.16";
     
         private final OdealCircuitBreaker circuitBreaker;
         
@@ -37,7 +40,7 @@ public abstract class BaseResource {
         this.config = config;
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
-                .connectTimeout(Duration.ofSeconds(30))
+                .connectTimeout(Duration.ofMillis(config.getTimeoutMs()))
                 .build();
         
         this.objectMapper = new ObjectMapper();
@@ -59,6 +62,8 @@ public abstract class BaseResource {
         return config;
     }
 
+    // ==================== Public Send API ====================
+
     public <T> T send(String method, String path, Object body, Map<String, Object> queryParams, Map<String, String> headerParams, Class<T> responseType) {
         return (T) sendInternal(method, path, body, queryParams, headerParams, responseType, false);
     }
@@ -72,6 +77,24 @@ public abstract class BaseResource {
         sendInternal(method, path, body, queryParams, headerParams, Void.class, false);
     }
 
+    // ==================== Async API ====================
+
+    @SuppressWarnings("unchecked")
+    public <T> CompletableFuture<T> sendAsync(String method, String path, Object body, Map<String, Object> queryParams, Map<String, String> headerParams, Class<T> responseType) {
+        return CompletableFuture.supplyAsync(() -> send(method, path, body, queryParams, headerParams, responseType));
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> CompletableFuture<List<T>> sendListAsync(String method, String path, Object body, Map<String, Object> queryParams, Map<String, String> headerParams, Class<T> itemType) {
+        return CompletableFuture.supplyAsync(() -> sendList(method, path, body, queryParams, headerParams, itemType));
+    }
+
+    public CompletableFuture<Void> sendVoidAsync(String method, String path, Object body, Map<String, Object> queryParams, Map<String, String> headerParams) {
+        return CompletableFuture.runAsync(() -> send(method, path, body, queryParams, headerParams));
+    }
+
+    // ==================== Request Pipeline ====================
+
     private Object sendInternal(String method, String path, Object body, Map<String, Object> queryParams, Map<String, String> headerParams, Class<?> responseType, boolean isList) {
         
                 // Circuit Breaker Guard
@@ -79,19 +102,23 @@ public abstract class BaseResource {
                     throw new com.odeal.sdk.exceptions.OdealCircuitOpenException();
                 }
                 
-        try {
-            return sendAsyncInternal(method, path, body, queryParams, headerParams, responseType, isList).get();
-        } catch (InterruptedException | ExecutionException e) {
-            if (e.getCause() instanceof OdealApiException) {
-                throw (OdealApiException) e.getCause();
-            }
-            throw new RuntimeException("Unexpected error during API call", e);
+
+        String fullUrl = buildUrl(config.getBaseUrl(), path, queryParams);
+        String jsonBody = prepareBody(body, method);
+        HttpRequest request = buildHttpRequest(method, fullUrl, jsonBody, headerParams);
+
+        if (config.isDebugMode()) {
+            logCurl(method, fullUrl, headerParams, jsonBody);
         }
+
+        HttpResponse<String> response = executeWithRetry(request, method, fullUrl, headerParams, jsonBody);
+        return processResponse(response, responseType, isList);
     }
 
-    private CompletableFuture<Object> sendAsyncInternal(String method, String path, Object body, Map<String, Object> queryParams, Map<String, String> headerParams, Class<?> responseType, boolean isList) {
-        String baseUrl = config.getBaseUrl().replaceAll("/$", "");
-        String fullUrl = baseUrl + (path.startsWith("/") ? path : "/" + path);
+    // ==================== URL Building ====================
+
+    private static String buildUrl(String baseUrl, String path, Map<String, Object> queryParams) {
+        String url = baseUrl.replaceAll("/$", "") + (path.startsWith("/") ? path : "/" + path);
 
         if (queryParams != null && !queryParams.isEmpty()) {
             StringBuilder queryString = new StringBuilder();
@@ -104,94 +131,235 @@ public abstract class BaseResource {
                 }
             });
             if (queryString.length() > 0) {
-                fullUrl += "?" + queryString;
+                url += "?" + queryString;
             }
         }
 
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create(fullUrl))
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json");
+        return url;
+    }
 
-        // Custom headers (method level overrides)
+    // ==================== Body Preparation ====================
+
+    private String prepareBody(Object body, String method) {
+        if (body == null) return null;
+
+        try {
+            fillConfigDefaults(body);
+            
+                        if (!config.isSkipClientValidation()) {
+                            validateModel(body);
+                        }
+                        
+            return objectMapper.writeValueAsString(body);
+        } catch (com.odeal.sdk.exceptions.OdealValidationException ve) {
+            throw ve;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Serialization error", e);
+        }
+    }
+
+    // ==================== HTTP Request Building ====================
+
+    private HttpRequest buildHttpRequest(String method, String url, String jsonBody, Map<String, String> headerParams) {
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .header("X-ODEAL-AGENT", AGENT);
+
         if (headerParams != null) {
             headerParams.forEach((k, v) -> {
                 if (v != null) requestBuilder.header(k, v);
             });
         }
 
-        // Agent header'ını her zaman ez (Kullanıcı değiştiremesin)
-        requestBuilder.header("X-ODEAL-AGENT", AGENT);
+        
+                // Idempotency Key: POST/PUT/PATCH isteklerinde çift işlem koruması
+                if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || "PATCH".equalsIgnoreCase(method)) {
+                    requestBuilder.header("X-Odeal-Idempotency-Key", java.util.UUID.randomUUID().toString().replace("-", ""));
+                }
+                
 
-        // Body
-        String jsonBody = null;
-        if (body != null) {
-            try {
-                fillConfigDefaults(body);
-                jsonBody = objectMapper.writeValueAsString(body);
-                requestBuilder.method(method, HttpRequest.BodyPublishers.ofString(jsonBody));
-            } catch (JsonProcessingException e) {
-                CompletableFuture<Object> failed = new CompletableFuture<>();
-                failed.completeExceptionally(new RuntimeException("Serialization error", e));
-                return failed;
-            }
+        if (jsonBody != null) {
+            requestBuilder.method(method, HttpRequest.BodyPublishers.ofString(jsonBody));
         } else {
             requestBuilder.method(method, HttpRequest.BodyPublishers.noBody());
         }
 
-        if (config.isDebugMode()) {
-            logCurl(method, fullUrl, headerParams, jsonBody);
+        return requestBuilder.build();
+    }
+
+    // ==================== Retry Execution ====================
+
+    private HttpResponse<String> executeWithRetry(HttpRequest request, String method, String fullUrl, Map<String, String> headerParams, String jsonBody) {
+        int currentTry = 0;
+        int maxRetries = config.getMaxRetryCount();
+
+        while (true) {
+            try {
+                
+                                // Interceptor: onBeforeRequest
+                                invokeBeforeInterceptors(method, fullUrl, headerParams, jsonBody);
+                                
+
+                long startTime = System.currentTimeMillis();
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                long durationMs = System.currentTimeMillis() - startTime;
+
+                
+                                // Interceptor: onAfterResponse
+                                invokeAfterInterceptors(method, fullUrl, headerParams, jsonBody, response, durationMs);
+                                
+
+                if (isRetryable(response.statusCode()) && currentTry < maxRetries) {
+                    
+                                        if (circuitBreaker != null) circuitBreaker.recordFailure();
+                                        
+                    currentTry++;
+                    long delayMs = calculateRetryDelay(currentTry, response);
+                    debugLog("Request failed with " + response.statusCode() + ". Retrying in " + delayMs + "ms. Attempt " + currentTry + " of " + maxRetries, "warn");
+                    Thread.sleep(delayMs);
+                    continue;
+                }
+
+                
+                                if (circuitBreaker != null) circuitBreaker.recordSuccess();
+                                
+                return response;
+
+            } catch (IOException e) {
+                
+                                if (circuitBreaker != null) circuitBreaker.recordFailure();
+                                
+                if (currentTry < maxRetries) {
+                    currentTry++;
+                    long delayMs = (long) (Math.pow(2, currentTry) * 500);
+                    debugLog("Network error: " + e.getMessage() + ". Retrying in " + delayMs + "ms. Attempt " + currentTry + " of " + maxRetries, "warn");
+                    try { Thread.sleep(delayMs); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); throw new RuntimeException(ie); }
+                    continue;
+                }
+                throw new RuntimeException("Network error during API call", e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Request interrupted", e);
+            }
+        }
+    }
+
+    private static boolean isRetryable(int statusCode) {
+        return statusCode >= 500 || statusCode == 429;
+    }
+
+    private static long calculateRetryDelay(int attempt, HttpResponse<String> response) {
+        long delayMs = (long) (Math.pow(2, attempt) * 500);
+        
+                String retryAfter = response.headers().firstValue("Retry-After").orElse(null);
+                if (retryAfter != null) {
+                    try { delayMs = Long.parseLong(retryAfter) * 1000; } catch (NumberFormatException ignored) {}
+                }
+                
+        return delayMs;
+    }
+
+    
+        // ==================== Interceptors ====================
+    
+        private void invokeBeforeInterceptors(String method, String url, Map<String, String> headers, String body) {
+            for (OdealInterceptor interceptor : config.getInterceptors()) {
+                
+                        String safeBody = config.isMaskSensitiveData() ? OdealSanitizer.sanitizeJson(body) : body;
+                        Map<String, String> safeHeaders = config.isMaskSensitiveData() ? OdealSanitizer.sanitizeHeaders(headers) : headers;
+                        
+                OdealInterceptor.RequestContext reqCtx = new OdealInterceptor.RequestContext(method, url, safeHeaders, safeBody);
+                interceptor.onBeforeRequest(reqCtx);
+            }
+        }
+    
+        private void invokeAfterInterceptors(String method, String url, Map<String, String> headers, String body, HttpResponse<String> response, long durationMs) {
+            for (OdealInterceptor interceptor : config.getInterceptors()) {
+                
+                        String safeBody = config.isMaskSensitiveData() ? OdealSanitizer.sanitizeJson(body) : body;
+                        String safeRespBody = config.isMaskSensitiveData() ? OdealSanitizer.sanitizeJson(response.body()) : response.body();
+                        Map<String, String> safeHeaders = config.isMaskSensitiveData() ? OdealSanitizer.sanitizeHeaders(headers) : headers;
+                        
+                OdealInterceptor.ResponseContext respCtx = new OdealInterceptor.ResponseContext();
+                respCtx.setStatusCode(response.statusCode());
+                respCtx.setBody(safeRespBody);
+                respCtx.setDurationMs(durationMs);
+                respCtx.setRequest(new OdealInterceptor.RequestContext(method, url, safeHeaders, safeBody));
+                interceptor.onAfterResponse(respCtx);
+            }
+        }
+    
+        // ==================== Validation ====================
+    
+        private void validateModel(Object body) {
+            if (body == null) return;
+            List<String> errors = new java.util.ArrayList<>();
+            for (java.lang.reflect.Field field : body.getClass().getDeclaredFields()) {
+                field.setAccessible(true);
+                try {
+                    Object value = field.get(body);
+                    // Zorunlu alan kontrolü: null veya boş string ise hata
+                    for (java.lang.annotation.Annotation ann : field.getAnnotations()) {
+                        if (ann.annotationType().getSimpleName().equals("Required") || 
+                            ann.annotationType().getSimpleName().equals("NotNull") ||
+                            ann.annotationType().getSimpleName().equals("NotEmpty")) {
+                            if (value == null || (value instanceof String && ((String)value).isEmpty())) {
+                                errors.add(field.getName() + " alanı zorunludur.");
+                            }
+                            break;
+                        }
+                    }
+                } catch (IllegalAccessException ignored) {}
+            }
+            if (!errors.isEmpty()) {
+                debugLog("Validation Failed: " + String.join(", ", errors), "warn");
+                throw new com.odeal.sdk.exceptions.OdealValidationException("Validation hatası: " + String.join("; ", errors), errors);
+            }
+        }
+        
+
+    // ==================== Response Processing ====================
+
+    private Object processResponse(HttpResponse<String> response, Class<?> responseType, boolean isList) {
+        if (response.statusCode() >= 400) {
+            throw new OdealApiException("API Error: " + response.statusCode(), response.statusCode(), response.body());
         }
 
-        return httpClient.sendAsync(requestBuilder.build(), HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> {
-                    if (response.statusCode() >= 400) {
-                        
-                                                if (circuitBreaker != null) circuitBreaker.recordFailure();
-                                                
-                        throw new OdealApiException("API Error: " + response.statusCode(), response.statusCode(), response.body());
-                    }
+        if (response.body() == null || response.body().isEmpty()) {
+            return null;
+        }
 
-                    
-                                        if (circuitBreaker != null) circuitBreaker.recordSuccess();
-                                        
+        try {
+            return deserializeResponse(response.body(), responseType, isList);
+        } catch (IOException e) {
+            throw new RuntimeException("Deserialization error", e);
+        }
+    }
 
-                    if (response.body() == null || response.body().isEmpty()) {
-                        return null;
-                    }
+    private Object deserializeResponse(String content, Class<?> responseType, boolean isList) throws IOException {
+        JsonNode rootNode = objectMapper.readTree(content);
 
-                    try {
-                        JsonNode rootNode = objectMapper.readTree(response.body());
-                        
-                        // Wrapper unwrapping logic:
-                        // 1. If it's a list, we MUST unwrap "result" if present (because List<T> matches the inner array, not {result: []}).
-                        // 2. If it's a single object, we only unwrap "result" if the target model DOES NOT have a "result" field itself.
-                        //    (e.g. BasketResponse has "result" field, so we keep the wrapper. But if we mapped directly to an internal model, we might need to unwrap).
-                        
-                        boolean shouldUnwrap = false;
-                        if (rootNode.isObject() && rootNode.has("result")) {
-                             if (isList) {
-                                 shouldUnwrap = true;
-                             } else {
-                                 // Check if target type already expects "result"
-                                 shouldUnwrap = !hasResultField(responseType);
-                             }
-                        }
+        boolean shouldUnwrap = false;
+        if (rootNode.isObject() && rootNode.has("result")) {
+            if (isList) {
+                shouldUnwrap = true;
+            } else {
+                shouldUnwrap = !hasResultField(responseType);
+            }
+        }
 
-                        if (shouldUnwrap) {
-                            rootNode = rootNode.get("result");
-                        }
-                        
-                        if (isList) {
-                             return objectMapper.readerForListOf(responseType).readValue(rootNode);
-                        } else {
-                            if (responseType == Void.class) return null;
-                            return objectMapper.treeToValue(rootNode, responseType);
-                        }
-                    } catch (IOException e) {
-                        throw new RuntimeException("Deserialization error", e);
-                    }
-                });
+        if (shouldUnwrap) {
+            rootNode = rootNode.get("result");
+        }
+
+        if (isList) {
+            return objectMapper.readerForListOf(responseType).readValue(rootNode);
+        } else {
+            if (responseType == Void.class) return null;
+            return objectMapper.treeToValue(rootNode, responseType);
+        }
     }
 
     private boolean hasResultField(Class<?> type) {
@@ -203,6 +371,8 @@ public abstract class BaseResource {
             return false;
         }
     }
+
+    // ==================== Client Defaults ====================
 
     private void fillConfigDefaults(Object body) {
         if (body == null) return;
@@ -227,20 +397,50 @@ public abstract class BaseResource {
         } catch (Exception ignored) {}
     }
 
+    // ==================== Debug Logging ====================
+
+    protected void debugLog(String message, String level) {
+        org.slf4j.Logger logger = config.getLogger();
+        if (!config.isDebugMode() && !"error".equals(level) && !"warn".equals(level)) {
+            return;
+        }
+        switch (level) {
+            case "error" -> logger.error(message);
+            case "warn" -> logger.warn(message);
+            case "info" -> logger.info(message);
+            default -> logger.debug(message);
+        }
+    }
+
     private void logCurl(String method, String url, Map<String, String> headers, String body) {
         StringBuilder sb = new StringBuilder();
         sb.append("curl -X ").append(method).append(" '").append(url).append("'");
-        // Headers (Default ones added manually for log accuracy)
         sb.append(" -H 'Content-Type: application/json'");
         sb.append(" -H 'Accept: application/json'");
         sb.append(" -H 'X-ODEAL-AGENT: ").append(AGENT).append("'");
         
         if (headers != null) {
-            headers.forEach((k, v) -> sb.append(" -H '").append(k).append(": ").append(v).append("'"));
+            headers.forEach((k, v) -> {
+                
+                                String safeVal = v;
+                                if (config.isMaskSensitiveData() && (k.toLowerCase().contains("secret") || k.toLowerCase().contains("key") || k.toLowerCase().contains("authorization"))) {
+                                    safeVal = "***";
+                                }
+                                sb.append(" -H '").append(k).append(": ").append(safeVal).append("'");
+                                
+            });
         }
         if (body != null) {
-            sb.append(" -d '").append(body).append("'");
+            
+                        String safeBody = body;
+                        if (config.isMaskSensitiveData()) {
+                            safeBody = safeBody.replaceAll("(?i)(\"password\"\\s*:\\s*\")[^\"]+\"", "$1***\"");
+                            safeBody = safeBody.replaceAll("(?i)(\"cvv\"\\s*:\\s*\")[^\"]+\"", "$1***\"");
+                            safeBody = safeBody.replaceAll("(?i)(\"cardNumber\"\\s*:\\s*\")[^\"]+\"", "$1***\"");
+                        }
+                        sb.append(" -d '").append(safeBody.replace("'", "'\\''")).append("'");
+                        
         }
-        System.out.println("[ODEAL DEBUG] " + sb.toString());
+        debugLog(sb.toString(), "info");
     }
 }
