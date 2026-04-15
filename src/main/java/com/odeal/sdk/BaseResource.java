@@ -28,7 +28,10 @@ public abstract class BaseResource {
     protected final HttpClient httpClient;
     protected final OdealConfig config;
     protected final ObjectMapper objectMapper;
-    private static final String AGENT = "OdealSdkJavaClient/2.2.13";
+    private static final String AGENT = "OdealSdkJavaClient/2.2.14";
+    
+        private final OdealCircuitBreaker circuitBreaker;
+        
 
     public BaseResource(OdealConfig config) {
         this.config = config;
@@ -42,6 +45,14 @@ public abstract class BaseResource {
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        
+                if (config.isCircuitBreakerEnabled()) {
+                    this.circuitBreaker = new OdealCircuitBreaker(config.getCircuitBreakerThreshold(), config.getCircuitBreakerResetMs());
+                } else {
+                    this.circuitBreaker = null;
+                }
+                
     }
 
     public OdealConfig getConfig() {
@@ -62,6 +73,12 @@ public abstract class BaseResource {
     }
 
     private Object sendInternal(String method, String path, Object body, Map<String, Object> queryParams, Map<String, String> headerParams, Class<?> responseType, boolean isList) {
+        
+                // Circuit Breaker Guard
+                if (circuitBreaker != null && !circuitBreaker.allowRequest()) {
+                    throw new OdealApiException("Circuit breaker is open. Requests are temporarily blocked.", 503, null);
+                }
+                
         try {
             return sendAsyncInternal(method, path, body, queryParams, headerParams, responseType, isList).get();
         } catch (InterruptedException | ExecutionException e) {
@@ -129,8 +146,15 @@ public abstract class BaseResource {
         return httpClient.sendAsync(requestBuilder.build(), HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> {
                     if (response.statusCode() >= 400) {
+                        
+                                                if (circuitBreaker != null) circuitBreaker.recordFailure();
+                                                
                         throw new OdealApiException("API Error: " + response.statusCode(), response.statusCode(), response.body());
                     }
+
+                    
+                                        if (circuitBreaker != null) circuitBreaker.recordSuccess();
+                                        
 
                     if (response.body() == null || response.body().isEmpty()) {
                         return null;
