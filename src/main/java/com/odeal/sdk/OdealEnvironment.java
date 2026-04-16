@@ -4,7 +4,7 @@ package com.odeal.sdk;
  * Odeal API ortam tanımları.
  *
  * <p>SDK'nın hangi ortama bağlanacağını belirler.
- * Varsayılan olarak {@link #STAGING} kullanılır.</p>
+ * Varsayılan olarak {@link #PRODUCTION} kullanılır.</p>
  *
  * <h3>Kullanım:</h3>
  * <pre>{@code
@@ -38,13 +38,13 @@ public enum OdealEnvironment {
      * String'den ortam çözümler. "production"/"prod" → PRODUCTION, diğer → STAGING.
      */
     public static OdealEnvironment fromString(String value) {
-        if (value == null) return STAGING;
+        if (value == null) return PRODUCTION;
         switch (value.toLowerCase()) {
             case "production":
             case "prod":
                 return PRODUCTION;
             default:
-                return STAGING;
+                return PRODUCTION;
         }
     }
 }

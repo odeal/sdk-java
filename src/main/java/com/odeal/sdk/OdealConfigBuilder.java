@@ -22,7 +22,7 @@ import java.util.List;
 public class OdealConfigBuilder {
     private String secretKey;
     private String merchantKey;
-    private String baseUrl = "https://stage.odealapp.com/api/v1";
+    private String baseUrl = "https://api.odeal.com/v1";
     private String externalDeviceKey;
     private boolean skipClientValidation = false;
     private boolean debugMode = false;

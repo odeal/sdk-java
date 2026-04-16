@@ -25,13 +25,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.lang.reflect.Method;
 
 public abstract class BaseResource {
     protected final HttpClient httpClient;
     protected final OdealConfig config;
     protected final ObjectMapper objectMapper;
-    private static final String AGENT = "OdealSdkJavaClient/2.3.0";
+    private static final String AGENT = "OdealSdkJavaClient/2.4.0";
+
+    /**
+     * Dedicated thread pool for async operations.
+     * Uses daemon threads to avoid blocking JVM shutdown.
+     * CachedThreadPool grows as needed and reclaims idle threads after 60s.
+     */
+    private static final ExecutorService ASYNC_EXECUTOR = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "odeal-sdk-async");
+        t.setDaemon(true);
+        return t;
+    });
     
         private final OdealCircuitBreaker circuitBreaker;
         
@@ -81,16 +94,16 @@ public abstract class BaseResource {
 
     @SuppressWarnings("unchecked")
     public <T> CompletableFuture<T> sendAsync(String method, String path, Object body, Map<String, Object> queryParams, Map<String, String> headerParams, Class<T> responseType) {
-        return CompletableFuture.supplyAsync(() -> send(method, path, body, queryParams, headerParams, responseType));
+        return CompletableFuture.supplyAsync(() -> send(method, path, body, queryParams, headerParams, responseType), ASYNC_EXECUTOR);
     }
 
     @SuppressWarnings("unchecked")
     public <T> CompletableFuture<List<T>> sendListAsync(String method, String path, Object body, Map<String, Object> queryParams, Map<String, String> headerParams, Class<T> itemType) {
-        return CompletableFuture.supplyAsync(() -> sendList(method, path, body, queryParams, headerParams, itemType));
+        return CompletableFuture.supplyAsync(() -> sendList(method, path, body, queryParams, headerParams, itemType), ASYNC_EXECUTOR);
     }
 
     public CompletableFuture<Void> sendVoidAsync(String method, String path, Object body, Map<String, Object> queryParams, Map<String, String> headerParams) {
-        return CompletableFuture.runAsync(() -> send(method, path, body, queryParams, headerParams));
+        return CompletableFuture.runAsync(() -> send(method, path, body, queryParams, headerParams), ASYNC_EXECUTOR);
     }
 
     // ==================== Request Pipeline ====================
