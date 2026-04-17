@@ -77,9 +77,24 @@ public class OdealClient {
     // ══════════════════════════════════════════════════════════════════════════
     // FACADE METHODS
     // ══════════════════════════════════════════════════════════════════════════
+    /**
+     * Standart ürün satışı. Müşteri Bireysel veya Kurumsal olabilir. 'items' alanı zorunludur.
+     * <p>Auth parametreleri config'den otomatik doldurulur.</p>
+     */
+    public BasketResponse createSimpleBasket(
+        BasketRequest request
+    ) {
+        return _basket.createSimpleBasket(
+            request,
+            null,
+            null,
+            null
+        );
+    }
 
     /**
      * Standart ürün satışı. Müşteri Bireysel veya Kurumsal olabilir. 'items' alanı zorunludur.
+     * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
      */
     public BasketResponse createSimpleBasket(
         BasketRequest request,
@@ -94,9 +109,24 @@ public class OdealClient {
             baseUrl
         );
     }
+    /**
+     * Avans tahsilatı. Müşteri Bireysel veya Kurumsal olabilir. 'items' gönderilmez. `basketType` ADVANCE olmalıdır.
+     * <p>Auth parametreleri config'den otomatik doldurulur.</p>
+     */
+    public BasketResponse createAdvanceBasket(
+        BasketRequestAdvance request
+    ) {
+        return _basket.createAdvanceBasket(
+            request,
+            null,
+            null,
+            null
+        );
+    }
 
     /**
      * Avans tahsilatı. Müşteri Bireysel veya Kurumsal olabilir. 'items' gönderilmez. `basketType` ADVANCE olmalıdır.
+     * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
      */
     public BasketResponse createAdvanceBasket(
         BasketRequestAdvance request,
@@ -111,9 +141,24 @@ public class OdealClient {
             baseUrl
         );
     }
+    /**
+     * Cari hesap tahsilatı. Müşteri Kurumsal olmalıdır. `basketType` CURRENT_ACCOUNT olmalıdır.
+     * <p>Auth parametreleri config'den otomatik doldurulur.</p>
+     */
+    public BasketResponse createCurrentAccountBasket(
+        BasketRequestCurrentAccount request
+    ) {
+        return _basket.createCurrentAccountBasket(
+            request,
+            null,
+            null,
+            null
+        );
+    }
 
     /**
      * Cari hesap tahsilatı. Müşteri Kurumsal olmalıdır. `basketType` CURRENT_ACCOUNT olmalıdır.
+     * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
      */
     public BasketResponse createCurrentAccountBasket(
         BasketRequestCurrentAccount request,
@@ -128,9 +173,24 @@ public class OdealClient {
             baseUrl
         );
     }
+    /**
+     * Yemek kartı işlemleri. `receiptInfo` ve içindeki `foodCardBrandId` zorunludur.
+     * <p>Auth parametreleri config'den otomatik doldurulur.</p>
+     */
+    public BasketResponse createFoodCardBasket(
+        BasketRequestFoodCard request
+    ) {
+        return _basket.createFoodCardBasket(
+            request,
+            null,
+            null,
+            null
+        );
+    }
 
     /**
      * Yemek kartı işlemleri. `receiptInfo` ve içindeki `foodCardBrandId` zorunludur.
+     * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
      */
     public BasketResponse createFoodCardBasket(
         BasketRequestFoodCard request,
@@ -145,9 +205,24 @@ public class OdealClient {
             baseUrl
         );
     }
+    /**
+     * Sepet Listele
+     * <p>Auth parametreleri config'den otomatik doldurulur.</p>
+     */
+    public BasketListResponse listBaskets(
+    ) {
+        return _basket.listBaskets(
+            
+            null,
+            null,
+            null,
+            null
+        );
+    }
 
     /**
      * Sepet Listele
+     * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
      */
     public BasketListResponse listBaskets(
         String secretKey,
@@ -163,9 +238,25 @@ public class OdealClient {
             baseUrl
         );
     }
+    /**
+     * Sepet Sil
+     * <p>Auth parametreleri config'den otomatik doldurulur.</p>
+     */
+    public void deleteBasket(
+        String referenceCode
+    ) {
+        _basket.deleteBasket(
+            
+            referenceCode,
+            null,
+            null,
+            null
+        );
+    }
 
     /**
      * Sepet Sil
+     * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
      */
     public void deleteBasket(
         String referenceCode,
@@ -181,9 +272,24 @@ public class OdealClient {
             baseUrl
         );
     }
+    /**
+     * Ödeme İptali
+     * <p>Auth parametreleri config'den otomatik doldurulur.</p>
+     */
+    public Object cancelPayment(
+        Object request
+    ) {
+        return _payment.cancelPayment(
+            request,
+            null,
+            null,
+            null
+        );
+    }
 
     /**
      * Ödeme İptali
+     * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
      */
     public Object cancelPayment(
         Object request,
@@ -198,9 +304,24 @@ public class OdealClient {
             baseUrl
         );
     }
+    /**
+     * Konfigürasyon Kaydet
+     * <p>Auth parametreleri config'den otomatik doldurulur.</p>
+     */
+    public void saveConfiguration(
+        ConfigurationRequest request
+    ) {
+        _configuration.saveConfiguration(
+            request,
+            null,
+            null,
+            null
+        );
+    }
 
     /**
      * Konfigürasyon Kaydet
+     * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
      */
     public void saveConfiguration(
         ConfigurationRequest request,
@@ -215,9 +336,23 @@ public class OdealClient {
             baseUrl
         );
     }
+    /**
+     * Birimleri Listele
+     * <p>Auth parametreleri config'den otomatik doldurulur.</p>
+     */
+    public List<Unit> listUnits(
+    ) {
+        return _unit.listUnits(
+            
+            null,
+            null,
+            null
+        );
+    }
 
     /**
      * Birimleri Listele
+     * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
      */
     public List<Unit> listUnits(
         String secretKey,
@@ -231,9 +366,29 @@ public class OdealClient {
             baseUrl
         );
     }
+    /**
+     * İşlem Raporu
+     * <p>Auth parametreleri config'den otomatik doldurulur.</p>
+     */
+    public List<TransactionReport> getTransactionReport(
+        String beginDate,
+        String endDate
+    ) {
+        return _report.getTransactionReport(
+            
+            beginDate,
+            endDate,
+            null,
+            null,
+            null,
+            null,
+            null
+        );
+    }
 
     /**
      * İşlem Raporu
+     * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
      */
     public List<TransactionReport> getTransactionReport(
         String beginDate,

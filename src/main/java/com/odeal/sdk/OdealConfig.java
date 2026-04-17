@@ -23,6 +23,9 @@ public class OdealConfig {
     private int circuitBreakerThreshold = 5;
     private int circuitBreakerResetMs = 60000;
 
+    /** Sandbox (test) modu. True olduğunda baseUrl değerine bakılmaksızın staging ortamı kullanılır. */
+    private boolean sandboxMode = false;
+
     public OdealConfig() {}
 
     /** Fluent builder ile OdealConfig oluşturmak için. */
@@ -76,6 +79,14 @@ public class OdealConfig {
     public void setCircuitBreakerThreshold(int v) { this.circuitBreakerThreshold = v; }
     public int getCircuitBreakerResetMs() { return circuitBreakerResetMs; }
     public void setCircuitBreakerResetMs(int v) { this.circuitBreakerResetMs = v; }
+
+    public boolean isSandboxMode() { return sandboxMode; }
+    public void setSandboxMode(boolean sandboxMode) { this.sandboxMode = sandboxMode; }
+
+    /** Efektif base URL — sandboxMode aktifse staging, değilse baseUrl döner. */
+    public String getEffectiveBaseUrl() {
+        return sandboxMode ? OdealEnvironment.STAGING.getBaseUrl() : baseUrl;
+    }
     // --- GÜVENLİK ---
 
     @Override

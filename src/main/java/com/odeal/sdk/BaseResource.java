@@ -33,7 +33,7 @@ public abstract class BaseResource {
     protected final HttpClient httpClient;
     protected final OdealConfig config;
     protected final ObjectMapper objectMapper;
-    private static final String AGENT = "OdealSdkJavaClient/2.4.0";
+    private static final String AGENT = "OdealSdkJavaClient/2.5.0";
 
     /**
      * Dedicated thread pool for async operations.
@@ -413,16 +413,18 @@ public abstract class BaseResource {
     // ==================== Debug Logging ====================
 
     protected void debugLog(String message, String level) {
-        org.slf4j.Logger logger = config.getLogger();
-        if (!config.isDebugMode() && !"error".equals(level) && !"warn".equals(level)) {
-            return;
-        }
-        switch (level) {
-            case "error" -> logger.error(message);
-            case "warn" -> logger.warn(message);
-            case "info" -> logger.info(message);
-            default -> logger.debug(message);
-        }
+        
+                org.slf4j.Logger logger = config.getLogger();
+                if (!config.isDebugMode() && !"error".equals(level) && !"warn".equals(level)) {
+                    return;
+                }
+                switch (level) {
+                    case "error" -> logger.error(message);
+                    case "warn" -> logger.warn(message);
+                    case "info" -> logger.info(message);
+                    default -> logger.debug(message);
+                }
+                
     }
 
     private void logCurl(String method, String url, Map<String, String> headers, String body) {
