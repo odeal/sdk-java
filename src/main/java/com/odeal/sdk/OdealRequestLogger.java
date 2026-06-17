@@ -1,6 +1,5 @@
 package com.odeal.sdk;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -25,6 +24,16 @@ import java.util.regex.Pattern;
  */
 public class OdealRequestLogger implements OdealInterceptor {
 
+    private static final List<String> DEFAULT_MASK_FIELDS = List.of(
+        "password", "cvv", "cvc", "cardNumber", "card_number", "pan",
+        "expiryDate", "expiry_date", "securityCode", "security_code",
+        "secretKey", "secret_key", "token", "accessToken", "access_token",
+        "refreshToken", "refresh_token", "authorization",
+        "tckn", "tcKimlikNo", "tcKimlik", "identityNumber", "nationalId",
+        "iban", "phone", "phoneNumber", "telephone", "gsm",
+        "email", "eMail", "mail", "address", "adres"
+    );
+
     private final String level;
     private final long minDurationMs;
     private final List<String> maskFields;
@@ -35,7 +44,7 @@ public class OdealRequestLogger implements OdealInterceptor {
     private OdealRequestLogger(Builder builder) {
         this.level = builder.level;
         this.minDurationMs = builder.minDurationMs;
-        this.maskFields = builder.maskFields;
+        this.maskFields = List.copyOf(builder.maskFields);
         this.logBody = builder.logBody;
         this.logResponseBody = builder.logResponseBody;
         this.logger = org.slf4j.LoggerFactory.getLogger(OdealRequestLogger.class);
@@ -84,7 +93,7 @@ public class OdealRequestLogger implements OdealInterceptor {
     private String maskSensitive(String text) {
         String result = text;
         for (String field : maskFields) {
-            result = Pattern.compile("(\"" + field + "\"\\s*:\\s*\")[^\"]+(\")", Pattern.CASE_INSENSITIVE)
+            result = Pattern.compile("(\"" + Pattern.quote(field) + "\"\\s*:\\s*\")[^\"]+(\")", Pattern.CASE_INSENSITIVE)
                     .matcher(result)
                     .replaceAll("$1***$2");
         }
@@ -96,13 +105,13 @@ public class OdealRequestLogger implements OdealInterceptor {
     public static class Builder {
         private String level = "info";
         private long minDurationMs = 0;
-        private List<String> maskFields = Arrays.asList("password", "cvv", "cardNumber");
+        private List<String> maskFields = DEFAULT_MASK_FIELDS;
         private boolean logBody = true;
         private boolean logResponseBody = false;
 
         public Builder level(String level) { this.level = level; return this; }
         public Builder minDurationMs(long ms) { this.minDurationMs = ms; return this; }
-        public Builder maskFields(List<String> fields) { this.maskFields = fields; return this; }
+        public Builder maskFields(List<String> fields) { this.maskFields = fields == null ? DEFAULT_MASK_FIELDS : List.copyOf(fields); return this; }
         public Builder logBody(boolean log) { this.logBody = log; return this; }
         public Builder logResponseBody(boolean log) { this.logResponseBody = log; return this; }
 

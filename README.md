@@ -2,7 +2,7 @@
 
 > Odeal Entegrasyon SDK (Otomatik Üretildi)
 
-> **Version:** 2.7.0 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
+> **Version:** 2.8.0 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
 
 
 ## Installation
@@ -13,14 +13,14 @@
 <dependency>
     <groupId>com.odeal</groupId>
     <artifactId>odeal-sdk</artifactId>
-    <version>2.7.0</version>
+    <version>2.8.0</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy
-implementation 'com.odeal:odeal-sdk:2.7.0'
+implementation 'com.odeal:odeal-sdk:2.8.0'
 ```
 
 ## Requirements
@@ -141,7 +141,7 @@ Built-in `OdealRequestLogger` middleware for production HTTP traffic logging:
 ```java
 OdealRequestLogger logger = new OdealRequestLogger.Builder()
     .level("info")
-    .maskFields(Arrays.asList("password", "cvv", "cardNumber"))
+    .maskFields(Arrays.asList("password", "cvv", "cardNumber", "tckn", "iban", "email", "phone", "address"))
     .logBody(true)
     .logResponseBody(false)
     .minDurationMs(0)
@@ -216,6 +216,7 @@ CompletableFuture.allOf(future1, future2, future3).join();
 | `CreateFoodCardBasket()` | Yemek kartı işlemleri. `receiptInfo` ve içindeki `foodCardBrandId` zorunludur. |
 | `ListBaskets()` | Sepet Listele |
 | `DeleteBasket()` | Sepet Sil |
+| `DeleteAllBaskets()` | Tüm Sepetleri Sil |
 ### PaymentResource
 
 | Method | Description |

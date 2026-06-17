@@ -4,16 +4,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.odeal.sdk.enums.*;
 import java.util.List;
 import java.math.BigDecimal;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.Valid;
 public class BasketRequestCurrentAccount {
     /**
      * 
      */
     @JsonProperty("referenceCode")
+    @NotNull(message = "ReferenceCode cannot be null")
+    @Valid
+    @Pattern(regexp = "^.{1,50}$", message = "Referans kodu 1-50 karakter arasında olmalıdır.")
     private String referenceCode;
     /**
      * 
      */
     @JsonProperty("externalDeviceKey")
+    @Valid
+    @Pattern(regexp = "^.{1,}$", message = "Cihaz kodu boş olamaz.")
     private String externalDeviceKey;
     /**
      * Zorunlu olarak 'CURRENT_ACCOUNT'.
@@ -24,21 +32,29 @@ public class BasketRequestCurrentAccount {
      * Zorunlu. 'receiptNumber' ve 'receiptDate' doldurulması önerilir.
      */
     @JsonProperty("receiptInfo")
+    @NotNull(message = "ReceiptInfo cannot be null")
+    @Valid
     private ReceiptInfo receiptInfo;
     /**
      * Müşteri Kurumsal olmalıdır.
      */
     @JsonProperty("customer")
+    @NotNull(message = "Customer cannot be null")
+    @Valid
     private Customer customer;
     /**
      * 
      */
     @JsonProperty("price")
+    @NotNull(message = "Price cannot be null")
+    @Valid
     private BasketPrice price;
     /**
      * Zorunlu.
      */
     @JsonProperty("paymentOptions")
+    @NotNull(message = "PaymentOptions cannot be null")
+    @Valid
     private List<PaymentOption> paymentOptions;
     public BasketRequestCurrentAccount() {}
     @JsonProperty("referenceCode")

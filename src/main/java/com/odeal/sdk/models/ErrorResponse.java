@@ -4,21 +4,27 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.odeal.sdk.enums.*;
 import java.util.List;
 import java.math.BigDecimal;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.Valid;
 public class ErrorResponse {
     /**
      * Hata kodu.
      */
     @JsonProperty("error")
+    @Valid
     private String error;
     /**
      * Hata aciklamasi.
      */
     @JsonProperty("message")
+    @Valid
     private String message;
     /**
      * Detayli hata listesi.
      */
     @JsonProperty("details")
+    @Valid
     private List<String> details;
     public ErrorResponse() {}
     @JsonProperty("error")

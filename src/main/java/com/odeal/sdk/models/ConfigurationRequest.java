@@ -4,46 +4,57 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.odeal.sdk.enums.*;
 import java.util.List;
 import java.math.BigDecimal;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.Valid;
 public class ConfigurationRequest {
     /**
      * 
      */
     @JsonProperty("eCommerceUrl")
+    @Valid
     private String eCommerceUrl;
     /**
      * Sepet bilgisinin alınacağı URL (external-basket için).
      */
     @JsonProperty("basketUrl")
+    @Valid
     private String basketUrl;
     /**
      * Ödeme başarılı bildirimi için URL.
      */
     @JsonProperty("paymentSucceededUrl")
+    @Valid
     private String paymentSucceededUrl;
     /**
      * Ödeme başarısız bildirimi için URL.
      */
     @JsonProperty("paymentFailedUrl")
+    @Valid
     private String paymentFailedUrl;
     /**
      * İptal bildirimi için URL.
      */
     @JsonProperty("paymentCancelledUrl")
+    @Valid
     private String paymentCancelledUrl;
     /**
      * 
      */
     @JsonProperty("eInvoiceCreatedUrl")
+    @Valid
     private String eInvoiceCreatedUrl;
     /**
      * 
      */
     @JsonProperty("eInvoiceIntegrator")
+    @Valid
     private String eInvoiceIntegrator;
     /**
      * Webhook isteklerinde güvenlik için X-ODEAL-REQUEST-KEY olarak gönderilir.
      */
     @JsonProperty("odealRequestKey")
+    @Valid
     private String odealRequestKey;
     public ConfigurationRequest() {}
     @JsonProperty("eCommerceUrl")

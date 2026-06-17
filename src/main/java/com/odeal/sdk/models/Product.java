@@ -4,32 +4,45 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.odeal.sdk.enums.*;
 import java.util.List;
 import java.math.BigDecimal;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.Valid;
 public class Product {
     /**
      * Birim Kodları.
     /// - _3I: Kilogram-Adet (C# Uyumu için ön ekli)
      */
     @JsonProperty("unitCode")
+    @NotNull(message = "UnitCode cannot be null")
     private ProductUnitCode unitCode;
     /**
      * 
      */
     @JsonProperty("name")
+    @NotNull(message = "Name cannot be null")
+    @Valid
+    @Pattern(regexp = "^.{1,255}$", message = "Ürün adı 1-255 karakter arasında olmalıdır.")
     private String name;
     /**
      * 
      */
     @JsonProperty("referenceCode")
+    @NotNull(message = "ReferenceCode cannot be null")
+    @Valid
+    @Pattern(regexp = "^.{1,50}$", message = "Ürün kodu 1-50 karakter arasında olmalıdır.")
     private String referenceCode;
     /**
      * 
      */
     @JsonProperty("price")
+    @NotNull(message = "Price cannot be null")
+    @Valid
     private ProductPrice price;
     /**
      * 
      */
     @JsonProperty("exemption")
+    @Valid
     private Exemption exemption;
     public Product() {}
     @JsonProperty("unitCode")

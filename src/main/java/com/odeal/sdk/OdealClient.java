@@ -273,6 +273,36 @@ public class OdealClient {
         );
     }
     /**
+     * Tüm Sepetleri Sil
+     * <p>Auth parametreleri config'den otomatik doldurulur.</p>
+     */
+    public void deleteAllBaskets(
+    ) {
+        _basket.deleteAllBaskets(
+            
+            null,
+            null,
+            null
+        );
+    }
+
+    /**
+     * Tüm Sepetleri Sil
+     * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
+     */
+    public void deleteAllBaskets(
+        String secretKey,
+        String merchantKey,
+        String baseUrl
+    ) {
+        _basket.deleteAllBaskets(
+            
+            secretKey,
+            merchantKey,
+            baseUrl
+        );
+    }
+    /**
      * Ödeme İptali
      * <p>Auth parametreleri config'den otomatik doldurulur.</p>
      */

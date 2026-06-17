@@ -324,4 +324,51 @@ public class BasketResource extends BaseResource {
             headerParams
         );
     }
+    /**
+     * Tüm Sepetleri Sil
+     */
+    public void deleteAllBaskets(
+    ) {
+        deleteAllBaskets(
+            
+            null,
+            null,
+            null
+        );
+    }
+
+    /**
+     * Tüm Sepetleri Sil
+     */
+    public void deleteAllBaskets(
+        String secretKey,
+        String merchantKey,
+        String baseUrl
+    ) {
+        String path = "/basket/delete-all-baskets";
+
+        Map<String, Object> queryParams = new HashMap<>();
+
+        Map<String, String> headerParams = new HashMap<>();
+        if (secretKey != null) {
+            headerParams.put("X-ODEAL-SECRET-KEY", String.valueOf(secretKey));
+        }
+        else if (getConfig().getSecretKey() != null) {
+             headerParams.put("X-ODEAL-SECRET-KEY", String.valueOf(getConfig().getSecretKey()));
+        }
+        if (merchantKey != null) {
+            headerParams.put("X-ODEAL-MERCHANT-KEY", String.valueOf(merchantKey));
+        }
+        else if (getConfig().getMerchantKey() != null) {
+             headerParams.put("X-ODEAL-MERCHANT-KEY", String.valueOf(getConfig().getMerchantKey()));
+        }
+
+        send(
+            "DELETE",
+            path,
+            null,
+            queryParams,
+            headerParams
+        );
+    }
 }

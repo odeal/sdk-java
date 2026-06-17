@@ -1,58 +1,98 @@
 package com.odeal.sdk;
 
 import java.time.Instant;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Circuit Breaker — art arda hata alındığında istekleri otomatik durdurur.
- * Thread-safe implementasyon (AtomicReference + AtomicInteger).
+ * Thread-safe implementasyon (synchronized; durum geçişi + probe izni atomik yapılır).
  */
 public class OdealCircuitBreaker {
     public enum State { CLOSED, OPEN, HALF_OPEN }
 
     private final int failureThreshold;
     private final long resetTimeoutMs;
+    private final Object lock = new Object();
 
-    private final AtomicReference<State> state = new AtomicReference<>(State.CLOSED);
-    private final AtomicInteger failureCount = new AtomicInteger(0);
-    private volatile Instant lastFailureTime = Instant.MIN;
+    private State state = State.CLOSED;
+    private int failureCount = 0;
+    private Instant lastFailureTime = Instant.MIN;
+    private boolean halfOpenProbeInFlight = false;
 
     public OdealCircuitBreaker(int failureThreshold, long resetTimeoutMs) {
         this.failureThreshold = failureThreshold;
         this.resetTimeoutMs = resetTimeoutMs;
     }
 
-    public State getCurrentState() {
-        if (state.get() == State.OPEN) {
-            long elapsed = Instant.now().toEpochMilli() - lastFailureTime.toEpochMilli();
-            if (elapsed >= resetTimeoutMs) {
-                state.compareAndSet(State.OPEN, State.HALF_OPEN);
-            }
-        }
-        return state.get();
+    private boolean resetElapsed() {
+        return Instant.now().toEpochMilli() - lastFailureTime.toEpochMilli() >= resetTimeoutMs;
     }
 
+    /** Mevcut durumu döner (yan etkisiz okuma). */
+    public State getCurrentState() {
+        synchronized (lock) {
+            if (state == State.OPEN && resetElapsed()) {
+                return State.HALF_OPEN;
+            }
+            return state;
+        }
+    }
+
+    /**
+     * İsteğin geçip geçemeyeceğini kontrol eder. HALF_OPEN durumunda yalnızca TEK bir
+     * probe (test) isteğine izin verilir; probe sonuçlanana kadar diğerleri reddedilir.
+     */
     public boolean allowRequest() {
-        State current = getCurrentState();
-        return current == State.CLOSED || current == State.HALF_OPEN;
+        synchronized (lock) {
+            // OPEN -> HALF_OPEN: reset süresi dolduysa tek bir probe denemesine kapı aç.
+            if (state == State.OPEN && resetElapsed()) {
+                state = State.HALF_OPEN;
+                halfOpenProbeInFlight = false;
+            }
+
+            switch (state) {
+                case CLOSED:
+                    return true;
+                case HALF_OPEN:
+                    if (halfOpenProbeInFlight) return false;
+                    halfOpenProbeInFlight = true; // probe izni bu isteğe verildi
+                    return true;
+                default:
+                    return false; // OPEN
+            }
+        }
     }
 
     public void recordSuccess() {
-        failureCount.set(0);
-        state.set(State.CLOSED);
+        synchronized (lock) {
+            failureCount = 0;
+            state = State.CLOSED;
+            halfOpenProbeInFlight = false;
+        }
     }
 
     public void recordFailure() {
-        int count = failureCount.incrementAndGet();
-        lastFailureTime = Instant.now();
-        if (count >= failureThreshold) {
-            state.set(State.OPEN);
+        synchronized (lock) {
+            lastFailureTime = Instant.now();
+
+            if (state == State.HALF_OPEN) {
+                // Probe başarısız -> doğrudan tekrar OPEN.
+                state = State.OPEN;
+                halfOpenProbeInFlight = false;
+                return;
+            }
+
+            failureCount++;
+            if (failureCount >= failureThreshold) {
+                state = State.OPEN;
+            }
         }
     }
 
     public void reset() {
-        failureCount.set(0);
-        state.set(State.CLOSED);
+        synchronized (lock) {
+            failureCount = 0;
+            state = State.CLOSED;
+            halfOpenProbeInFlight = false;
+        }
     }
 }

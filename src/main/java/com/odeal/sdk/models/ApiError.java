@@ -4,36 +4,45 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.odeal.sdk.enums.*;
 import java.util.List;
 import java.math.BigDecimal;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.Valid;
 public class ApiError {
     /**
      * HTTP status kodu.
      */
     @JsonProperty("code")
+    @Valid
     private Integer code;
     /**
      * Kullaniciya gosterilebilecek hata mesaji.
      */
     @JsonProperty("message")
+    @Valid
     private String message;
     /**
      * Opsiyonel teknik detay.
      */
     @JsonProperty("details")
+    @Valid
     private String details;
     /**
      * Hatanin olustu zaman.
      */
     @JsonProperty("timestamp")
+    @Valid
     private String timestamp;
     /**
      * Hatanin olustugu endpoint.
      */
     @JsonProperty("path")
+    @Valid
     private String path;
     /**
      * Validasyon hatalari (400 icin).
      */
     @JsonProperty("validationErrors")
+    @Valid
     private List<ValidationError> validationErrors;
     public ApiError() {}
     @JsonProperty("code")

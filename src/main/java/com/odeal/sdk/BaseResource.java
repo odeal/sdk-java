@@ -33,7 +33,7 @@ public abstract class BaseResource {
     protected final HttpClient httpClient;
     protected final OdealConfig config;
     protected final ObjectMapper objectMapper;
-    private static final String AGENT = "OdealSdkJavaClient/2.7.0";
+    private static final String AGENT = "OdealSdkJavaClient/2.8.0";
 
     /**
      * Dedicated thread pool for async operations.
@@ -77,6 +77,7 @@ public abstract class BaseResource {
 
     // ==================== Public Send API ====================
 
+    @SuppressWarnings("unchecked")
     public <T> T send(String method, String path, Object body, Map<String, Object> queryParams, Map<String, String> headerParams, Class<T> responseType) {
         return (T) sendInternal(method, path, body, queryParams, headerParams, responseType, false);
     }
@@ -449,9 +450,7 @@ public abstract class BaseResource {
             
                         String safeBody = body;
                         if (config.isMaskSensitiveData()) {
-                            safeBody = safeBody.replaceAll("(?i)(\"password\"\\s*:\\s*\")[^\"]+\"", "$1***\"");
-                            safeBody = safeBody.replaceAll("(?i)(\"cvv\"\\s*:\\s*\")[^\"]+\"", "$1***\"");
-                            safeBody = safeBody.replaceAll("(?i)(\"cardNumber\"\\s*:\\s*\")[^\"]+\"", "$1***\"");
+                            safeBody = OdealSanitizer.sanitizeJson(safeBody);
                         }
                         sb.append(" -d '").append(safeBody.replace("'", "'\\''")).append("'");
                         

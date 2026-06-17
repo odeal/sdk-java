@@ -4,46 +4,57 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.odeal.sdk.enums.*;
 import java.util.List;
 import java.math.BigDecimal;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.Valid;
 public class TransactionReport {
     /**
      * 
      */
     @JsonProperty("basketReferenceCode")
+    @Valid
     private String basketReferenceCode;
     /**
      * 
      */
     @JsonProperty("paymentId")
+    @Valid
     private String paymentId;
     /**
      * 
      */
     @JsonProperty("currentStatus")
+    @Valid
     private String currentStatus;
     /**
      * 
      */
     @JsonProperty("amount")
+    @Valid
     private String amount;
     /**
      * 
      */
     @JsonProperty("invoiceNumber")
+    @Valid
     private String invoiceNumber;
     /**
      * 
      */
     @JsonProperty("invoicePdfUrl")
+    @Valid
     private String invoicePdfUrl;
     /**
      * 
      */
     @JsonProperty("basketStatus")
+    @Valid
     private String basketStatus;
     /**
      * 
      */
     @JsonProperty("invoiceGibStatusCode")
+    @Valid
     private Integer invoiceGibStatusCode;
     public TransactionReport() {}
     @JsonProperty("basketReferenceCode")
