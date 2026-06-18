@@ -37,7 +37,7 @@ public abstract class BaseResource {
     protected final HttpClient httpClient;
     protected final OdealConfig config;
     protected final ObjectMapper objectMapper;
-    private static final String AGENT = "OdealSdkJavaClient/2.12.0";
+    private static final String AGENT = "OdealSdkJavaClient/2.14.0";
 
     /**
      * Dedicated thread pool for async operations.
@@ -123,7 +123,7 @@ public abstract class BaseResource {
 
         String fullUrl = buildUrl(config.getBaseUrl(), path, queryParams);
         String jsonBody = prepareBody(body, method);
-        HttpRequest request = buildHttpRequest(method, fullUrl, jsonBody, headerParams);
+        HttpRequest request = buildHttpRequest(method, fullUrl, jsonBody, body, headerParams);
 
         if (config.isDebugMode()) {
             logCurl(method, fullUrl, headerParams, jsonBody);
@@ -159,7 +159,8 @@ public abstract class BaseResource {
     // ==================== Body Preparation ====================
 
     private String prepareBody(Object body, String method) {
-        if (body == null) return null;
+        // multipart gövdesi JSON'a serialize edilmez; buildHttpRequest ham bayt üretir.
+        if (body == null || body instanceof MultipartBody) return null;
 
         try {
             fillConfigDefaults(body);
@@ -178,15 +179,29 @@ public abstract class BaseResource {
 
     // ==================== HTTP Request Building ====================
 
-    private HttpRequest buildHttpRequest(String method, String url, String jsonBody, Map<String, String> headerParams) {
+    private HttpRequest buildHttpRequest(String method, String url, String jsonBody, Object body, Map<String, String> headerParams) {
+        // multipart/form-data: ham bayt + boundary'li Content-Type üret.
+        byte[] multipartBytes = null;
+        String contentType = "application/json";
+        if (body instanceof MultipartBody) {
+            MultipartBody mp = (MultipartBody) body;
+            contentType = mp.getContentType();
+            multipartBytes = mp.toBytes();
+        }
+
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 // İstek (yanıt) zaman aşımı — connectTimeout yalnız bağlantı kurmayı kapsar,
                 // yavaş yanıtları değil. Yapılandırılan timeout tüm istek/yanıta uygulanır.
                 .timeout(Duration.ofMillis(config.getTimeoutMs()))
-                .header("Content-Type", "application/json")
+                .header("Content-Type", contentType)
                 .header("Accept", "application/json")
                 .header("X-ODEAL-AGENT", AGENT);
+
+        // OAuth2 / Bearer: accessToken ayarlıysa Authorization header ekle (boşsa eklenmez)
+        if (config.getAccessToken() != null && !config.getAccessToken().isEmpty()) {
+            requestBuilder.header("Authorization", "Bearer " + config.getAccessToken());
+        }
 
         if (headerParams != null) {
             headerParams.forEach((k, v) -> {
@@ -201,7 +216,9 @@ public abstract class BaseResource {
                 }
                 
 
-        if (jsonBody != null) {
+        if (multipartBytes != null) {
+            requestBuilder.method(method, HttpRequest.BodyPublishers.ofByteArray(multipartBytes));
+        } else if (jsonBody != null) {
             requestBuilder.method(method, HttpRequest.BodyPublishers.ofString(jsonBody));
         } else {
             requestBuilder.method(method, HttpRequest.BodyPublishers.noBody());

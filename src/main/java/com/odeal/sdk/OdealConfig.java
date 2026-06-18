@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 public class OdealConfig {
     private String secretKey;
     private String merchantKey;
+    private String accessToken; // OAuth2/Bearer: ayarlıysa Authorization: Bearer eklenir
     private String baseUrl = "https://api.odeal.com/v1";
     private String externalDeviceKey;
     private boolean skipClientValidation = false;
@@ -45,6 +46,9 @@ public class OdealConfig {
 
     public String getMerchantKey() { return merchantKey; }
     public void setMerchantKey(String merchantKey) { this.merchantKey = merchantKey; }
+
+    public String getAccessToken() { return accessToken; }
+    public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
 
     public String getBaseUrl() { return baseUrl; }
     public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
