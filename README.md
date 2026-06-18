@@ -2,7 +2,7 @@
 
 > Odeal Entegrasyon SDK (Otomatik Üretildi)
 
-> **Version:** 2.9.0 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
+> **Version:** 2.10.0 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
 
 
 ## Installation
@@ -13,14 +13,14 @@
 <dependency>
     <groupId>com.odeal</groupId>
     <artifactId>odeal-sdk</artifactId>
-    <version>2.9.0</version>
+    <version>2.10.0</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy
-implementation 'com.odeal:odeal-sdk:2.9.0'
+implementation 'com.odeal:odeal-sdk:2.10.0'
 ```
 
 ## Requirements
@@ -186,6 +186,41 @@ future.thenAccept(response -> System.out.println("Result: " + response));
 
 // Parallel requests
 CompletableFuture.allOf(future1, future2, future3).join();
+```
+
+## Webhook Verification
+
+Gelen Odeal webhook'larının gerçekten Odeal'den geldiğini HMAC-SHA256 imzasıyla doğrulayın.
+İmza `X-Odeal-Signature` header'ında, **ham gövde** üzerinden hesaplanarak gelir.
+
+```java
+import com.odeal.sdk.OdealWebhookVerifier;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+public class WebhookController {
+
+    @PostMapping("/webhooks/odeal")
+    public ResponseEntity<String> handleWebhook(
+            @RequestBody String payload,
+            @RequestHeader("X-Odeal-Signature") String signature) {
+
+        if (!OdealWebhookVerifier.verifySignature(payload, signature, "your-webhook-secret")) {
+            return ResponseEntity.status(401).body("Invalid webhook signature");
+        }
+
+        // İmza geçerli — webhook olayını işle
+        return ResponseEntity.ok().build();
+    }
+}
+```
+
+Replay koruması için timestamp doğrulamalı sürüm (önerilir):
+
+```java
+boolean valid = OdealWebhookVerifier.verifySignatureWithTimestamp(
+    payload, signature, timestamp, "your-webhook-secret"); // varsayılan 5 dk tolerans
 ```
 
 ## Features
