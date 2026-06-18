@@ -9,6 +9,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.odeal.sdk.exceptions.OdealApiException;
+import com.odeal.sdk.exceptions.OdealAuthenticationException;
+import com.odeal.sdk.exceptions.OdealForbiddenException;
+import com.odeal.sdk.exceptions.OdealNotFoundException;
+import com.odeal.sdk.exceptions.OdealRateLimitException;
 
 import com.odeal.sdk.exceptions.OdealValidationException;
 
@@ -33,7 +37,7 @@ public abstract class BaseResource {
     protected final HttpClient httpClient;
     protected final OdealConfig config;
     protected final ObjectMapper objectMapper;
-    private static final String AGENT = "OdealSdkJavaClient/2.10.0";
+    private static final String AGENT = "OdealSdkJavaClient/2.11.0";
 
     /**
      * Dedicated thread pool for async operations.
@@ -177,6 +181,9 @@ public abstract class BaseResource {
     private HttpRequest buildHttpRequest(String method, String url, String jsonBody, Map<String, String> headerParams) {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
+                // İstek (yanıt) zaman aşımı — connectTimeout yalnız bağlantı kurmayı kapsar,
+                // yavaş yanıtları değil. Yapılandırılan timeout tüm istek/yanıta uygulanır.
+                .timeout(Duration.ofMillis(config.getTimeoutMs()))
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .header("X-ODEAL-AGENT", AGENT);
@@ -257,11 +264,23 @@ public abstract class BaseResource {
                     try { Thread.sleep(delayMs); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); throw new RuntimeException(ie); }
                     continue;
                 }
-                throw new RuntimeException("Network error during API call", e);
+                // Ağ hatası / zaman aşımı → Odeal exception hiyerarşisi (diğer dillerle tutarlı).
+                throw new OdealApiException("Network/timeout error during API call", 0, e.getMessage());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException("Request interrupted", e);
             }
+        }
+    }
+
+    // Zengin hata hiyerarşisi: HTTP status → spesifik exception tipi.
+    private static OdealApiException mapApiException(int statusCode, String body) {
+        switch (statusCode) {
+            case 401: return new OdealAuthenticationException("Authentication failed.", body);
+            case 403: return new OdealForbiddenException("Access denied.", body);
+            case 404: return new OdealNotFoundException("Resource not found.", body);
+            case 429: return new OdealRateLimitException("Rate limit exceeded.", body, null);
+            default:  return new OdealApiException("API Error: " + statusCode, statusCode, body);
         }
     }
 
@@ -343,7 +362,7 @@ public abstract class BaseResource {
 
     private Object processResponse(HttpResponse<String> response, Class<?> responseType, boolean isList) {
         if (response.statusCode() >= 400) {
-            throw new OdealApiException("API Error: " + response.statusCode(), response.statusCode(), response.body());
+            throw mapApiException(response.statusCode(), response.body());
         }
 
         if (response.body() == null || response.body().isEmpty()) {
