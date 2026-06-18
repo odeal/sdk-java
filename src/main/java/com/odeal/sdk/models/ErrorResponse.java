@@ -9,31 +9,45 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.Valid;
 public class ErrorResponse {
     /**
-     * Hata kodu.
+     * İş kuralı hata kodu (ör. 2029).
      */
-    @JsonProperty("error")
+    @JsonProperty("code")
     @Valid
-    private String error;
+    private Integer code;
     /**
-     * Hata aciklamasi.
+     * Hata tipi (ör. BUSINESS, VALIDATION).
+     */
+    @JsonProperty("exceptionType")
+    @Valid
+    private String exceptionType;
+    /**
+     * Teknik hata açıklaması.
      */
     @JsonProperty("message")
     @Valid
     private String message;
     /**
-     * Detayli hata listesi.
+     * Son kullanıcıya gösterilebilecek mesaj.
      */
-    @JsonProperty("details")
+    @JsonProperty("userMessage")
     @Valid
-    private List<String> details;
+    private String userMessage;
     public ErrorResponse() {}
-    @JsonProperty("error")
-    public String getError() {
-        return error;
+    @JsonProperty("code")
+    public Integer getCode() {
+        return code;
     }
 
-    public void setError(String error) {
-        this.error = error;
+    public void setCode(Integer code) {
+        this.code = code;
+    }
+    @JsonProperty("exceptionType")
+    public String getExceptionType() {
+        return exceptionType;
+    }
+
+    public void setExceptionType(String exceptionType) {
+        this.exceptionType = exceptionType;
     }
     @JsonProperty("message")
     public String getMessage() {
@@ -43,12 +57,12 @@ public class ErrorResponse {
     public void setMessage(String message) {
         this.message = message;
     }
-    @JsonProperty("details")
-    public List<String> getDetails() {
-        return details;
+    @JsonProperty("userMessage")
+    public String getUserMessage() {
+        return userMessage;
     }
 
-    public void setDetails(List<String> details) {
-        this.details = details;
+    public void setUserMessage(String userMessage) {
+        this.userMessage = userMessage;
     }
 }

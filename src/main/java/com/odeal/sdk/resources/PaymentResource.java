@@ -18,8 +18,8 @@ public class PaymentResource extends BaseResource {
     /**
      * Ödeme İptali
      */
-    public Object cancelPayment(
-        Object request
+    public CancelPaymentResponse cancelPayment(
+        CancelPaymentRequest request
     ) {
         return cancelPayment(
             request,
@@ -32,8 +32,8 @@ public class PaymentResource extends BaseResource {
     /**
      * Ödeme İptali
      */
-    public Object cancelPayment(
-        Object request,
+    public CancelPaymentResponse cancelPayment(
+        CancelPaymentRequest request,
         String secretKey,
         String merchantKey,
         String baseUrl
@@ -62,7 +62,7 @@ public class PaymentResource extends BaseResource {
             request,
             queryParams,
             headerParams,
-            Object.class
+            CancelPaymentResponse.class
         );
     }
 }

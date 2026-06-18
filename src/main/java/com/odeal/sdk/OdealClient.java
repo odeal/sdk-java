@@ -306,8 +306,8 @@ public class OdealClient {
      * Ödeme İptali
      * <p>Auth parametreleri config'den otomatik doldurulur.</p>
      */
-    public Object cancelPayment(
-        Object request
+    public CancelPaymentResponse cancelPayment(
+        CancelPaymentRequest request
     ) {
         return _payment.cancelPayment(
             request,
@@ -321,8 +321,8 @@ public class OdealClient {
      * Ödeme İptali
      * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
      */
-    public Object cancelPayment(
-        Object request,
+    public CancelPaymentResponse cancelPayment(
+        CancelPaymentRequest request,
         String secretKey,
         String merchantKey,
         String baseUrl
