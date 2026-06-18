@@ -2,7 +2,7 @@
 
 > Odeal Entegrasyon SDK (Otomatik Üretildi)
 
-> **Version:** 2.8.0 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
+> **Version:** 2.9.0 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
 
 
 ## Installation
@@ -13,14 +13,14 @@
 <dependency>
     <groupId>com.odeal</groupId>
     <artifactId>odeal-sdk</artifactId>
-    <version>2.8.0</version>
+    <version>2.9.0</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy
-implementation 'com.odeal:odeal-sdk:2.8.0'
+implementation 'com.odeal:odeal-sdk:2.9.0'
 ```
 
 ## Requirements
@@ -39,6 +39,10 @@ config.setSecretKey("your-secret-key");
 config.setMerchantKey("your-merchant-key");
 
 OdealClient client = new OdealClient(config);
+
+// SDK iki kullanım biçimini de destekler — ikisi de eşdeğerdir, aynı metoda gider:
+BasketResponse response  = client.createSimpleBasket(request);          // 1) Flat (doğrudan)
+BasketResponse response2 = client.basket().createSimpleBasket(request); // 2) Grouped (resource üzerinden)
 ```
 
 ## Configuration

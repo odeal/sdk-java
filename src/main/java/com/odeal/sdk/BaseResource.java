@@ -33,7 +33,7 @@ public abstract class BaseResource {
     protected final HttpClient httpClient;
     protected final OdealConfig config;
     protected final ObjectMapper objectMapper;
-    private static final String AGENT = "OdealSdkJavaClient/2.8.0";
+    private static final String AGENT = "OdealSdkJavaClient/2.9.0";
 
     /**
      * Dedicated thread pool for async operations.
@@ -225,10 +225,18 @@ public abstract class BaseResource {
                                 invokeAfterInterceptors(method, fullUrl, headerParams, jsonBody, response, durationMs);
                                 
 
-                if (isRetryable(response.statusCode()) && currentTry < maxRetries) {
-                    
-                                        if (circuitBreaker != null) circuitBreaker.recordFailure();
-                                        
+                boolean isRetryableFailure = isRetryable(response.statusCode());
+
+                
+                                // Devre-kıran: 5xx/429 = başarısızlık; diğer (2xx/4xx) = sunucu yanıt verdi (başarı sayılır).
+                                // (Eskiden exhausted 5xx'te recordSuccess çağrılıp sayaç sıfırlanıyordu → devre açılmıyordu.)
+                                if (circuitBreaker != null) {
+                                    if (isRetryableFailure) circuitBreaker.recordFailure();
+                                    else circuitBreaker.recordSuccess();
+                                }
+                                
+
+                if (isRetryableFailure && currentTry < maxRetries) {
                     currentTry++;
                     long delayMs = calculateRetryDelay(currentTry, response);
                     debugLog("Request failed with " + response.statusCode() + ". Retrying in " + delayMs + "ms. Attempt " + currentTry + " of " + maxRetries, "warn");
@@ -236,9 +244,6 @@ public abstract class BaseResource {
                     continue;
                 }
 
-                
-                                if (circuitBreaker != null) circuitBreaker.recordSuccess();
-                                
                 return response;
 
             } catch (IOException e) {
