@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PKG: artifacts/package.tgz
+      PKG: artifacts/package.jar
 
     steps:
 
@@ -34,146 +34,137 @@ jobs:
         distribution: 'temurin'
         architecture: x64
 
-    # - name: Install cosign
-    #   uses: sigstore/cosign-installer@v3
+    - name: Install cosign
+      uses: sigstore/cosign-installer@v3
 
-    # - name: Install Syft
-    #   run: |
-    #     curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | \
-    #       sh -s -- -b /usr/local/bin
+    - name: Install Syft
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | \
+          sh -s -- -b /usr/local/bin
 
-    # - name: Install grype
-    #   run: |
-    #     curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | \
-    #       sh -s -- -b /usr/local/bin
+    - name: Install grype
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | \
+          sh -s -- -b /usr/local/bin
 
 # BUILD
 
     - name: Package
       run: mvn -B package
 
-    - name: Deploy
-      run: mvn -B deploy
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Pack Maven
       run: |
-        # mvn clean deploy -DskipTests
-        # mkdir -p artifacts
-        # mv target/*.jar $PKG
-        # ls -lah artifacts
+        mkdir -p artifacts
 
-        ls -lah
+        cp target/*.jar $PKG
 
-# # SIGN ARTIFACT
+        ls -lah artifacts
 
-#     - name: Sign package
-#       run: |
-#         cosign sign-blob \
-#           --yes \
-#           --bundle artifacts/sign.bundle.json \
-#           "$PKG"
+# SIGN ARTIFACT
 
-# # VERIFY SIGNATURE
+    - name: Sign package
+      run: |
+        cosign sign-blob \
+          --yes \
+          --bundle artifacts/sign.bundle.json \
+          "$PKG"
 
-#     - name: Verify package signature
-#       run: |
-#         cosign verify-blob \
-#           --bundle artifacts/sign.bundle.json \
-#           --certificate-identity-regexp "^https://github.com/${{ github.repository }}/.github/workflows/maven\.yml@refs/(heads/main|tags/v?[0-9]+\.[0-9]+\.[0-9]+)$" \
-#           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-#           "$PKG"
+# VERIFY SIGNATURE
 
-# # SBOM
+    - name: Verify package signature
+      run: |
+        cosign verify-blob \
+          --bundle artifacts/sign.bundle.json \
+          --certificate-identity-regexp "^https://github.com/${{ github.repository }}/.github/workflows/maven\.yml@refs/(heads/main|tags/v?[0-9]+\.[0-9]+\.[0-9]+)$" \
+          --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+          "$PKG"
 
-#     - name: Generate SBOM
-#       run: |
-#         syft dir:. -o cyclonedx-json > artifacts/sbom.json
-        
-# # SBOM ATTESTATION
+# SBOM
 
-#     - name: Attest SBOM
-#       env:
-#         COSIGN_YES: "true"
-#       run: |
-#         cosign attest-blob \
-#           --yes \
-#           --bundle artifacts/sbom.bundle.json \
-#           --predicate artifacts/sbom.json \
-#           --type cyclonedx \
-#           "$PKG"
+    - name: Generate SBOM
+      run: |
+        syft dir:. -o cyclonedx-json > artifacts/sbom.json
 
-# # VERIFY SBOM
+# SBOM ATTESTATION
 
-#     - name: Verify SBOM attestation
-#       run: |
-#         cosign verify-blob-attestation \
-#           --bundle artifacts/sbom.bundle.json \
-#           --type cyclonedx \
-#           --certificate-identity-regexp "^https://github.com/${{ github.repository }}/.github/workflows/maven\.yml@refs/(heads/main|tags/v?[0-9]+\.[0-9]+\.[0-9]+)$" \
-#           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-#           "$PKG"
+    - name: Attest SBOM
+      env:
+        COSIGN_YES: "true"
+      run: |
+        cosign attest-blob \
+          --yes \
+          --bundle artifacts/sbom.bundle.json \
+          --predicate artifacts/sbom.json \
+          --type cyclonedx \
+          "$PKG"
 
-# # VULN SCAN
+# VERIFY SBOM
 
-#     - name: Scan vulnerabilities
-#       run: |
-#         grype --version
-        
-#         grype sbom:artifacts/sbom.json -f high
-        
-#         grype sbom:artifacts/sbom.json -o cyclonedx-json > artifacts/vuln.json
+    - name: Verify SBOM attestation
+      run: |
+        cosign verify-blob-attestation \
+          --bundle artifacts/sbom.bundle.json \
+          --type cyclonedx \
+          --certificate-identity-regexp "^https://github.com/${{ github.repository }}/.github/workflows/maven\.yml@refs/(heads/main|tags/v?[0-9]+\.[0-9]+\.[0-9]+)$" \
+          --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+          "$PKG"
 
-# # VULN ATTESTATION
+# VULN SCAN
 
-#     - name: Attest vulnerabilities
-#       run: |
-#         cosign attest-blob \
-#           --yes \
-#           --bundle artifacts/vuln.bundle.json \
-#           --predicate artifacts/vuln.json \
-#           --type vuln \
-#           "$PKG"
+    - name: Scan vulnerabilities
+      run: |
+        grype --version
 
-# # VERIFY VULN
+        # SBOM'u tara ve attestation için kaydet (önce üret — sıra önemli).
+        grype sbom:artifacts/sbom.json -o cyclonedx-json > artifacts/vuln.json
 
-#     - name: Verify vulnerability attestation
-#       run: |
-#         cosign verify-blob-attestation \
-#           --bundle artifacts/vuln.bundle.json \
-#           --type vuln \
-#           --certificate-identity-regexp "^https://github.com/${{ github.repository }}/.github/workflows/maven\.yml@refs/(heads/main|tags/v?[0-9]+\.[0-9]+\.[0-9]+)$" \
-#           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-#           "$PKG"
+        # İlk geçişte BLOKE ETMEZ — yalnız raporlar (görünür uyarı).
+        # Gate'i etkinleştirmek için '|| echo ...' kısmını kaldırın.
+        grype sbom:artifacts/sbom.json -f high || echo "::warning::grype: yüksek/kritik zafiyet bulundu (ilk geçişte bloke edilmiyor)"
+
+# VULN ATTESTATION
+
+    - name: Attest vulnerabilities
+      run: |
+        cosign attest-blob \
+          --yes \
+          --bundle artifacts/vuln.bundle.json \
+          --predicate artifacts/vuln.json \
+          --type vuln \
+          "$PKG"
+
+# VERIFY VULN
+
+    - name: Verify vulnerability attestation
+      run: |
+        cosign verify-blob-attestation \
+          --bundle artifacts/vuln.bundle.json \
+          --type vuln \
+          --certificate-identity-regexp "^https://github.com/${{ github.repository }}/.github/workflows/maven\.yml@refs/(heads/main|tags/v?[0-9]+\.[0-9]+\.[0-9]+)$" \
+          --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+          "$PKG"
 
 # PROVENANCE
 
-    # - name: Generate provenance
-    #   uses: actions/attest-build-provenance@v4
-    #   with:
-    #     subject-path: artifacts #/package.nupkg
+    - name: Generate provenance
+      uses: actions/attest-build-provenance@v4
+      with:
+        subject-path: ${{ env.PKG }}
 
-# # ARTIFACT UPLOAD
+# ARTIFACT UPLOAD
 
-#     - name: Upload artifacts
-#       uses: actions/upload-artifact@v4
-#       # if: always()
-#       with:
-#         name: maven-package
-#         path: |
-#           artifacts/*.jar
-#           artifacts/*.json
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      # if: always()
+      with:
+        name: maven-package
+        path: |
+          artifacts/*.jar
+          artifacts/*.json
 
-# # PUBLISH
+# PUBLISH
 
-#     - name: Add GitHub Maven registry
-#       run: |
-#         echo 'registry=https://registry.maven.org/' > /home/runner/work/_temp/.m2/settings.xml
-#         echo '@${{ github.repository_owner }}:registry=https://maven.pkg.github.com' >> /home/runner/work/_temp/.m2/settings.xml
-#         echo '//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}' >> /home/runner/work/_temp/.npmrc
-
-
-#     - name: Publish NPM Package
-#       run: |
-#         npm publish "./$PKG" --registry https://npm.pkg.github.com/${{ github.repository_owner }}/
+    - name: Deploy to GitHub Packages
+      run: mvn -B deploy
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
