@@ -2,7 +2,7 @@
 
 > Odeal Entegrasyon SDK (Otomatik Üretildi)
 
-> **Version:** 2.16.0 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
+> **Version:** 2.16.1 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
 
 
 ## Installation
@@ -13,14 +13,14 @@
 <dependency>
     <groupId>com.odeal</groupId>
     <artifactId>odeal-sdk</artifactId>
-    <version>2.16.0</version>
+    <version>2.16.1</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy
-implementation 'com.odeal:odeal-sdk:2.16.0'
+implementation 'com.odeal:odeal-sdk:2.16.1'
 ```
 
 ## Requirements
@@ -249,33 +249,33 @@ boolean valid = OdealWebhookVerifier.verifySignatureWithTimestamp(
 
 | Method | Description |
 |:-------|:------------|
-| `CreateSimpleBasket()` | Standart ürün satışı. Müşteri Bireysel veya Kurumsal olabilir. 'items' alanı zorunludur. |
-| `CreateAdvanceBasket()` | Avans tahsilatı. Müşteri Bireysel veya Kurumsal olabilir. 'items' gönderilmez. `basketType` ADVANCE olmalıdır. |
-| `CreateCurrentAccountBasket()` | Cari hesap tahsilatı. Müşteri Kurumsal olmalıdır. `basketType` CURRENT_ACCOUNT olmalıdır. |
-| `CreateFoodCardBasket()` | Yemek kartı işlemleri. `receiptInfo` ve içindeki `foodCardBrandId` zorunludur. |
-| `ListBaskets()` | Sepet Listele |
-| `DeleteBasket()` | Sepet Sil |
-| `DeleteAllBaskets()` | Tüm Sepetleri Sil |
+| `createSimpleBasket()` | Standart ürün satışı. Müşteri Bireysel veya Kurumsal olabilir. 'items' alanı zorunludur. |
+| `createAdvanceBasket()` | Avans tahsilatı. Müşteri Bireysel veya Kurumsal olabilir. 'items' gönderilmez. `basketType` ADVANCE olmalıdır. |
+| `createCurrentAccountBasket()` | Cari hesap tahsilatı. Müşteri Kurumsal olmalıdır. `basketType` CURRENT_ACCOUNT olmalıdır. |
+| `createFoodCardBasket()` | Yemek kartı işlemleri. `receiptInfo` ve içindeki `foodCardBrandId` zorunludur. |
+| `listBaskets()` | Sepet Listele |
+| `deleteBasket()` | Sepet Sil |
+| `deleteAllBaskets()` | Tüm Sepetleri Sil |
 ### PaymentResource
 
 | Method | Description |
 |:-------|:------------|
-| `CancelPayment()` | Ödeme İptali |
+| `cancelPayment()` | Ödeme İptali |
 ### ConfigurationResource
 
 | Method | Description |
 |:-------|:------------|
-| `SaveConfiguration()` | Konfigürasyon Kaydet |
+| `saveConfiguration()` | Konfigürasyon Kaydet |
 ### UnitResource
 
 | Method | Description |
 |:-------|:------------|
-| `ListUnits()` | Birimleri Listele |
+| `listUnits()` | Birimleri Listele |
 ### ReportResource
 
 | Method | Description |
 |:-------|:------------|
-| `GetTransactionReport()` | İşlem Raporu |
+| `getTransactionReport()` | İşlem Raporu |
 
 ## 🔐 Güvenlik & Doğrulama
 
