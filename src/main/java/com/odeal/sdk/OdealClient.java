@@ -367,6 +367,36 @@ public class OdealClient {
         );
     }
     /**
+     * Konfigürasyon Getir
+     * <p>Auth parametreleri config'den otomatik doldurulur.</p>
+     */
+    public ConfigurationResponse getConfiguration(
+    ) {
+        return _configuration.getConfiguration(
+            
+            null,
+            null,
+            null
+        );
+    }
+
+    /**
+     * Konfigürasyon Getir
+     * <p>Tum parametreleri acikca belirtmek icin kullanin.</p>
+     */
+    public ConfigurationResponse getConfiguration(
+        String secretKey,
+        String merchantKey,
+        String baseUrl
+    ) {
+        return _configuration.getConfiguration(
+            
+            secretKey,
+            merchantKey,
+            baseUrl
+        );
+    }
+    /**
      * Birimleri Listele
      * <p>Auth parametreleri config'den otomatik doldurulur.</p>
      */

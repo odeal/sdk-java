@@ -64,4 +64,52 @@ public class ConfigurationResource extends BaseResource {
             headerParams
         );
     }
+    /**
+     * Konfigürasyon Getir
+     */
+    public ConfigurationResponse getConfiguration(
+    ) {
+        return getConfiguration(
+            
+            null,
+            null,
+            null
+        );
+    }
+
+    /**
+     * Konfigürasyon Getir
+     */
+    public ConfigurationResponse getConfiguration(
+        String secretKey,
+        String merchantKey,
+        String baseUrl
+    ) {
+        String path = "/configuration";
+
+        Map<String, Object> queryParams = new HashMap<>();
+
+        Map<String, String> headerParams = new HashMap<>();
+        if (secretKey != null) {
+            headerParams.put("X-ODEAL-SECRET-KEY", String.valueOf(secretKey));
+        }
+        else if (getConfig().getSecretKey() != null) {
+             headerParams.put("X-ODEAL-SECRET-KEY", String.valueOf(getConfig().getSecretKey()));
+        }
+        if (merchantKey != null) {
+            headerParams.put("X-ODEAL-MERCHANT-KEY", String.valueOf(merchantKey));
+        }
+        else if (getConfig().getMerchantKey() != null) {
+             headerParams.put("X-ODEAL-MERCHANT-KEY", String.valueOf(getConfig().getMerchantKey()));
+        }
+
+        return send(
+            "GET",
+            path,
+            null,
+            queryParams,
+            headerParams,
+            ConfigurationResponse.class
+        );
+    }
 }
