@@ -37,7 +37,7 @@ public abstract class BaseResource {
     protected final HttpClient httpClient;
     protected final OdealConfig config;
     protected final ObjectMapper objectMapper;
-    private static final String AGENT = "OdealSdkJavaClient/2.17.7";
+    private static final String AGENT = "OdealSdkJavaClient/2.17.8";
 
     /**
      * Dedicated thread pool for async operations.
