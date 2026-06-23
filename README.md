@@ -2,7 +2,7 @@
 
 > Odeal Entegrasyon SDK (Otomatik Üretildi)
 
-> **Version:** 2.17.5 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
+> **Version:** 2.17.6 | **License:** MIT | **Auto-Generated** by Odeal SDK Generator
 
 
 ## Installation
@@ -13,14 +13,14 @@
 <dependency>
     <groupId>com.odeal</groupId>
     <artifactId>odeal-sdk</artifactId>
-    <version>2.17.5</version>
+    <version>2.17.6</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy
-implementation 'com.odeal:odeal-sdk:2.17.5'
+implementation 'com.odeal:odeal-sdk:2.17.6'
 ```
 
 ## Requirements
