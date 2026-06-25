@@ -43,7 +43,7 @@ public class ApiError {
      */
     @JsonProperty("validationErrors")
     @Valid
-    private List<ValidationError> validationErrors;
+    private List<ValidationError> validationErrors = new java.util.ArrayList<>();
     public ApiError() {}
     @JsonProperty("code")
     public Integer getCode() {

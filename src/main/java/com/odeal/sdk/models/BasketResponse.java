@@ -9,18 +9,18 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.Valid;
 public class BasketResponse {
     /**
-     * 
+     * Oluşturulan sepetin sonucu.
      */
     @JsonProperty("result")
     @Valid
-    private Object result;
+    private BasketCreateResult result;
     public BasketResponse() {}
     @JsonProperty("result")
-    public Object getResult() {
+    public BasketCreateResult getResult() {
         return result;
     }
 
-    public void setResult(Object result) {
+    public void setResult(BasketCreateResult result) {
         this.result = result;
     }
 }

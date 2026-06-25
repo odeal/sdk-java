@@ -55,14 +55,14 @@ public class BasketRequestFoodCard {
     @JsonProperty("items")
     @NotNull(message = "Items cannot be null")
     @Valid
-    private List<Item> items;
+    private List<Item> items = new java.util.ArrayList<>();
     /**
      * 
      */
     @JsonProperty("paymentOptions")
     @NotNull(message = "PaymentOptions cannot be null")
     @Valid
-    private List<Object> paymentOptions;
+    private List<Object> paymentOptions = new java.util.ArrayList<>();
     public BasketRequestFoodCard() {}
     @JsonProperty("referenceCode")
     public String getReferenceCode() {

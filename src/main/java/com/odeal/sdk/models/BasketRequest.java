@@ -54,14 +54,14 @@ public class BasketRequest {
     @JsonProperty("items")
     @NotNull(message = "Items cannot be null")
     @Valid
-    private List<Item> items;
+    private List<Item> items = new java.util.ArrayList<>();
     /**
      * Zorunlu. Ödeme yöntemleri.
      */
     @JsonProperty("paymentOptions")
     @NotNull(message = "PaymentOptions cannot be null")
     @Valid
-    private List<PaymentOption> paymentOptions;
+    private List<PaymentOption> paymentOptions = new java.util.ArrayList<>();
     public BasketRequest() {}
     @JsonProperty("referenceCode")
     public String getReferenceCode() {

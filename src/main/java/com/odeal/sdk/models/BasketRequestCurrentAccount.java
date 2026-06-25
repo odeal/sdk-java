@@ -55,7 +55,7 @@ public class BasketRequestCurrentAccount {
     @JsonProperty("paymentOptions")
     @NotNull(message = "PaymentOptions cannot be null")
     @Valid
-    private List<PaymentOption> paymentOptions;
+    private List<PaymentOption> paymentOptions = new java.util.ArrayList<>();
     public BasketRequestCurrentAccount() {}
     @JsonProperty("referenceCode")
     public String getReferenceCode() {
