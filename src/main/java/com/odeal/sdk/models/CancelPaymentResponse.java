@@ -9,18 +9,18 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.Valid;
 public class CancelPaymentResponse {
     /**
-     * 
+     * Ödeme iptal sonucu.
      */
     @JsonProperty("result")
     @Valid
-    private Object result;
+    private CancelPaymentResult result;
     public CancelPaymentResponse() {}
     @JsonProperty("result")
-    public Object getResult() {
+    public CancelPaymentResult getResult() {
         return result;
     }
 
-    public void setResult(Object result) {
+    public void setResult(CancelPaymentResult result) {
         this.result = result;
     }
 }
