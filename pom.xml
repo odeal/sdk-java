@@ -6,7 +6,7 @@
 
     <groupId>com.odeal</groupId>
     <artifactId>odeal-sdk</artifactId>
-    <version>0.1.5</version>
+    <version>0.1.6</version>
     
     <name>Odeal Java SDK</name>
     <description>Odeal Entegrasyon SDK (Otomatik Üretildi)</description>
@@ -18,6 +18,21 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
+    <url>https://github.com/odeal/sdk</url>
+
+    <developers>
+        <developer>
+            <id>odeal</id>
+            <name>Odeal</name>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/odeal/sdk</url>
+        <connection>scm:git:https://github.com/odeal/sdk.git</connection>
+        <developerConnection>scm:git:https://github.com/odeal/sdk.git</developerConnection>
+    </scm>
 
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
@@ -105,4 +120,69 @@
             <url>https://maven.pkg.github.com/odeal/sdk-java</url>
         </snapshotRepository>
     </distributionManagement>
+
+    <!-- ================================================================
+         Maven Central yayını — YALNIZCA `mvn -Pcentral-release deploy` ile aktif olur.
+         Varsayılan build ve mevcut GitHub Packages deploy'unu ETKİLEMEZ (profil kapalıyken
+         pom davranışı birebir aynıdır). Deploy anında ekip tarafından gereken:
+           - GPG anahtarı (artifact imzalama — Central şartı)
+           - Sonatype Central kimlik bilgileri: ~/.m2/settings.xml içinde <server id=central>
+         sources.jar + javadoc.jar Central için zorunludur; bu profil ikisini de üretir.
+         ================================================================ -->
+    <profiles>
+        <profile>
+            <id>central-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals><goal>jar-no-fork</goal></goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.6.3</version>
+                        <configuration>
+                            <failOnError>false</failOnError>
+                            <doclint>none</doclint>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals><goal>jar</goal></goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.4</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals><goal>sign</goal></goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.5.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
